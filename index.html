@@ -175,7 +175,7 @@
 
             <div id="morphWrap" class="p-3 rounded-lg border border-studio-800 bg-studio-950/50 space-y-3">
               <div class="flex items-center justify-between">
-                <span class="text-xs font-semibold text-studio-400 uppercase tracking-wider flex items-center gap-1.5">🌀 Dynamic Style Blending</span>
+                <span class="text-xs font-semibold text-studio-400 uppercase tracking-wider flex items-center gap-1.5">🌀 Dynamic Style Blending <span class="normal-case font-normal text-studio-500">(timeline)</span></span>
                 <button id="addMorphBtn" type="button" class="touch-target min-h-[32px] text-xs px-2.5 py-1 rounded-md bg-studio-800 hover:bg-studio-700 text-amber-400 font-medium transition-colors">+ Add Marker</button>
               </div>
               <div class="flex flex-wrap gap-1.5">
@@ -219,9 +219,9 @@
                 </div>
               </div>
               <div id="morphMarkers" class="space-y-2"></div>
-              <p id="morphHint" class="text-xs text-studio-500">Structural Cues places ordered section cues in the lyrics/structure box instead of confusing the main prompt.</p>
+              <p id="morphHint" class="text-xs text-studio-500">Structural Cues uses ordered section cues in the lyrics/structure box. Exact timeline seconds stay in the UI because most generators do not reliably sequence a single prompt by timecode.</p>
               
-              <!-- Chain Panel (Restored Missing HTML Button to Prevent Crash) -->
+              <!-- Chain Panel with proper Copy Button to prevent runtime exceptions -->
               <div id="chainPanel" class="hidden space-y-2">
                 <div class="flex items-center justify-between">
                   <span class="text-xs font-semibold text-studio-400 uppercase tracking-wider">Extension prompts</span>
@@ -337,7 +337,6 @@
           </div>
         </div>
 
-        <!-- Sound Traits Box -->
         <div class="bg-studio-900 border border-studio-800 rounded-xl p-5 shadow-sm">
           <div class="flex items-center justify-between pb-3 border-b border-studio-800 mb-3">
             <h2 class="text-base font-semibold text-white flex items-center gap-2">
@@ -419,8 +418,8 @@
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
-                <label for="topicInput" class="block text-sm font-medium text-studio-400 mb-1">Story Concept <span class="text-studio-500 text-xs font-normal">(noun phrase)</span></label>
-                <input type="text" id="topicInput" placeholder="e.g. a midnight drive, fading neon..." class="touch-target w-full bg-studio-950 border border-studio-800 focus:border-amber-500 rounded-lg px-4 py-2.5 text-base text-studio-100 outline-none">
+                <label for="topicInput" class="block text-sm font-medium text-studio-400 mb-1">Story Concept <span class="text-studio-500 text-xs font-normal">(narrative anchor)</span></label>
+                <input type="text" id="topicInput" placeholder="e.g. Midnight drive on empty neon highway..." class="touch-target w-full bg-studio-950 border border-studio-800 focus:border-amber-500 rounded-lg px-4 py-2.5 text-base text-studio-100 outline-none">
               </div>
               <div>
                 <label for="structureSelect" class="block text-sm font-medium text-studio-400 mb-1">Architecture</label>
@@ -492,399 +491,131 @@
   (function(){
     'use strict';
     
-    // FULL DATA DICTIONARIES (UN-MINIFIED TO ENSURE COMPLETE LOADING)
+    // FULL DATA DICTIONARIES INCLUDED FOR OFFLINE / STANDALONE FUNCTIONALITY
     const ARCHETYPES = {
-      'Synthwave': { 
-        label: 'Synthwave', 
-        style: 'Synthwave, Darksynth, Outrun', 
-        mood: 'Nostalgic, Midnight, Neon', 
-        tempo: '118 BPM, F Minor', 
-        vocalType: 'male', 
-        vocals: ['Emotive falsetto lead', 'Reverb-gated vocal doubles'], 
-        instruments: ['Analog saw-wave synth lead', 'Gated snare drum', 'Pulsing arpeggiator bassline', 'LinnDrum'], 
-        production: ['80s gated reverb chamber', 'Analog tape saturation'], 
-        rhythm: ['Driving four-on-the-floor kick', '16th-note synth arpeggio pulse'], 
-        topic: 'Speeding through an empty neon city' 
-      },
-      'French House': { 
-        label: 'French House', 
-        style: 'French House, Nu-Disco', 
-        mood: 'Euphoric, Groovy, Luxurious', 
-        tempo: '124 BPM, D Minor', 
-        vocalType: 'vocoder', 
-        vocals: ['Vocoder robotic hooks', 'Talkbox harmonies'], 
-        instruments: ['Funky slap bass', 'Filtered vinyl sample loops', 'Analog synth brass'], 
-        production: ['Heavy sidechain compression pump', 'Resonant low-pass filter sweeps'], 
-        rhythm: ['Four-on-the-floor kick', 'Swung syncopated funk pocket'], 
-        topic: 'Glittering lights on a Parisian dancefloor' 
-      },
-      'Deep House': { 
-        label: 'Deep House', 
-        style: 'Deep House, Melodic Club', 
-        mood: 'Smooth, Hypnotic, Late-Night', 
-        tempo: '122 BPM, G Minor', 
-        vocalType: 'female', 
-        vocals: ['Breathy soulful lead', 'Soft pitched-down vocal chops'], 
-        instruments: ['Round subby M1 organ bass', 'Fender Rhodes electric piano', 'Crisp 909 percussion'], 
-        production: ['Sub-bass focus below 60Hz', 'Spacious club reverb'], 
-        rhythm: ['Gentle four-on-the-floor pulse', 'Swung 16th-note shaker groove'], 
-        topic: 'Floating through late-night ocean waves' 
-      },
-      'Melodic Techno': { 
-        label: 'Melodic Techno', 
-        style: 'Melodic Techno', 
-        mood: 'Hypnotic, Cinematic, Tense', 
-        tempo: '126 BPM, C Minor', 
-        vocalType: 'instrumental', 
-        vocals: ['Wordless ethereal vocal pad'], 
-        instruments: ['Rolling modular bass', 'Hypnotic pluck arpeggio', 'Massive reverb snare'], 
-        production: ['Long filter sweeps', 'Ultra-wide stereo panning'], 
-        rhythm: ['Relentless four-on-the-floor drive', 'Rolling bassline syncopation'], 
-        topic: 'A journey through deep interstellar frequencies' 
-      },
-      'Drum & Bass': { 
-        label: 'Drum & Bass', 
-        style: 'Liquid Drum & Bass, Jungle', 
-        mood: 'Energetic, Soaring, Futuristic', 
-        tempo: '174 BPM, F Minor', 
-        vocalType: 'female', 
-        vocals: ['Soulful high-register soprano', 'Pitched-up vocal chops'], 
-        instruments: ['Modulated Reese bass', 'Crisp chopped Amen breakbeat', 'Rhodes piano chords'], 
-        production: ['Sub-bass mono isolation', 'Fast stereo delay ping-pong'], 
-        rhythm: ['Lightning 174 BPM breakbeat pattern', 'Syncopated rolling snare shuffle'], 
-        topic: 'High-speed glide through digital horizons' 
-      },
-      'EDM Festival': { 
-        label: 'EDM Festival', 
-        style: 'Festival Progressive House', 
-        mood: 'Euphoric, Anthemic, Massive', 
-        tempo: '128 BPM, B Minor', 
-        vocalType: 'female', 
-        vocals: ['Anthemic soaring lead belting', 'Festival crowd choir'], 
-        instruments: ['Layered supersaw synth chords', 'Acoustic grand piano melody', 'Sub-frequency kick'], 
-        production: ['Extreme sidechain ducking', 'Massive stadium reverb wash'], 
-        rhythm: ['Pounding 128 BPM four-on-the-floor', 'Snare roll crescendo riser'], 
-        topic: 'Celebrating with ten thousand voices' 
-      },
-      'Ambient Chillwave': { 
-        label: 'Ambient Chillwave', 
-        style: 'Ambient, Chillwave, Downtempo', 
-        mood: 'Serene, Meditative, Weightless', 
-        tempo: '75 BPM, D Major', 
-        vocalType: 'instrumental', 
-        vocals: ['Soft wordless vocal breath'], 
-        instruments: ['Warm prophet synth pads', 'Clean delayed electric guitar arpeggios', 'Upright piano'], 
-        production: ['Infinite reverb decay tails', 'Binaural panning spatial field'], 
-        rhythm: ['Slow drifting ambient pulse', 'Unquantized brush percussion'], 
-        topic: 'Stillness at dawn on a quiet mountain ridge' 
-      },
-      'Melodic Trap': { 
-        label: 'Melodic Trap', 
-        style: 'Melodic Trap, R&B Rap', 
-        mood: 'Moody, Introspective, Heavy', 
-        tempo: '140 BPM, C# Minor', 
-        vocalType: 'male', 
-        vocals: ['Autotuned melodic sing-rap', 'Breathy falsetto ad-libs'], 
-        instruments: ['Deep sliding 808 sub bass', 'Minor key bell plucks', 'Fast rolling hi-hats'], 
-        production: ['Sub-bass soft clipping saturation', 'Dark low-pass filter on chords'], 
-        rhythm: ['Half-time snare on beat 3', 'Triplet 32nd-note hi-hat rolls'], 
-        topic: 'Reflecting on the climb and isolation' 
-      },
-      'Boom-Bap': { 
-        label: 'Boom-Bap', 
-        style: 'Boom-Bap, Jazz Rap', 
-        mood: 'Grounded, Gritty, Thoughtful', 
-        tempo: '90 BPM, Bb Minor', 
-        vocalType: 'male', 
-        vocals: ['Crisp articulate delivery', 'Soulful sampled hook'], 
-        instruments: ['Dusty upright bassline', 'Warm jazz guitar loop', 'Punchy acoustic kick and snare'], 
-        production: ['SP-1200 12-bit sampler crunch', 'Warm vinyl crackle and hiss'], 
-        rhythm: ['Swung unquantized head-nod rhythm', 'Laid-back pocket'], 
-        topic: 'Chronicles of city life and staying genuine' 
-      },
-      'Lo-Fi Hip-Hop': { 
-        label: 'Lo-Fi Hip-Hop', 
-        style: 'Lo-Fi Hip Hop, Chillhop', 
-        mood: 'Cozy, Nostalgic, Relaxed', 
-        tempo: '82 BPM, Eb Major', 
-        vocalType: 'instrumental', 
-        vocals: ['None - instrumental focus'], 
-        instruments: ['Detuned Rhodes electric piano', 'Felt upright piano', 'Muted electric bass'], 
-        production: ['Cassette tape wow and flutter', 'Low-pass filter at 8kHz', 'Vinyl surface dust'], 
-        rhythm: ['Drunk lazy swung drum groove', 'Gentle muted kick drum'], 
-        topic: 'Rain falling gently against the library window' 
-      },
-      'Contemporary Pop': { 
-        label: 'Contemporary Pop', 
-        style: 'Pop, Dance-Pop', 
-        mood: 'Catchy, Polished, Upbeat', 
-        tempo: '120 BPM, C Major', 
-        vocalType: 'female', 
-        vocals: ['Crystal clear lead vocal', 'Stacked radio pop harmonies'], 
-        instruments: ['Bright polysynth chords', 'Live bass guitar with synth layer', 'Modern hybrid drums'], 
-        production: ['Glossy high-end sparkle', 'Multiband radio-ready master'], 
-        rhythm: ['Driving four-on-the-floor pop pulse', 'Clap-stacked snare'], 
-        topic: 'Letting go of doubt and living fearlessly' 
-      },
-      'Alternative R&B': { 
-        label: 'Alternative R&B', 
-        style: 'Alternative R&B, Dark Soul', 
-        mood: 'Seductive, Moody, Intimate', 
-        tempo: '88 BPM, F# Minor', 
-        vocalType: 'female', 
-        vocals: ['Silky multi-octave range', 'Breathy intimate falsetto runs'], 
-        instruments: ['Warm electric piano with tremolo', 'Deep subby 808 bass', 'Atmospheric guitar swells'], 
-        production: ['Lush plate reverb space', 'Warm low-end saturation'], 
-        rhythm: ['Slow sensual half-time groove', 'Syncopated neo-soul hi-hats'], 
-        topic: 'Late-night confessions and undeniable attraction' 
-      },
-      'Neo-Soul': { 
-        label: 'Neo-Soul', 
-        style: 'Neo-Soul, Soul, Jazz-Funk', 
-        mood: 'Warm, Organic, Earthy', 
-        tempo: '86 BPM, E Minor', 
-        vocalType: 'female', 
-        vocals: ['Rich chest voice belt', 'Gospel-trained layered harmonies'], 
-        instruments: ['Vintage Rhodes Mark I', 'Groovy fingerstyle electric bass', 'Warm live drum kit'], 
-        production: ['Natural room tone acoustics', 'Analog tube warmth'], 
-        rhythm: ['Behind-the-beat pocket', 'Swung unquantized live drumming'], 
-        topic: 'Healing, self-love, and rhythm of life' 
-      },
-      'Alternative Rock': { 
-        label: 'Alternative Rock', 
-        style: 'Grunge, 90s Alternative Rock', 
-        mood: 'Raw, Angsty, Cathartic', 
-        tempo: '116 BPM, E Minor', 
-        vocalType: 'belting', 
-        vocals: ['Raspy strained lead vocal', 'Cracked emotional falsetto'], 
-        instruments: ['Distorted heavy guitars', 'Pounding acoustic drum kit', 'Overdriven melodic bass'], 
-        production: ['Quiet-to-loud dynamic contrasts', 'Vintage tape console grit'], 
-        rhythm: ['Heavy backbeat rock groove', 'Hard-hitting crash cymbals'], 
-        topic: 'Breaking through inner turmoil' 
-      },
-      'Modern Metalcore': { 
-        label: 'Modern Metalcore', 
-        style: 'Metalcore, Djent', 
-        mood: 'Aggressive, Massive, Cathartic', 
-        tempo: '150 BPM, Drop D', 
-        vocalType: 'belting', 
-        vocals: ['Guttural aggressive screams', 'Soaring anthemic clean melodic chorus'], 
-        instruments: ['Down-tuned 7-string palm-muted guitars', 'Thunderous double-kick drum blasts', 'Sub-frequency bass drops'], 
-        production: ['Ultra-tight gate on rhythm guitars', 'Massive low-end impact'], 
-        rhythm: ['Syncopated polyrhythmic djent riffs', 'Crushing half-time breakdown'], 
-        topic: 'Rising from ashes when everything was meant to break you' 
-      },
-      'Cinematic Hybrid': { 
-        label: 'Cinematic Hybrid', 
-        style: 'Cinematic Orchestral, Hybrid Trailer Score', 
-        mood: 'Epic, Heroic, Tense', 
-        tempo: '90 BPM, D Minor', 
-        vocalType: 'instrumental', 
-        vocals: ['Wordless Gregorian choir chant'], 
-        instruments: ['80-piece symphony string section', 'Massive Japanese taiko drums', 'Synthetic sub-bass braams'], 
-        production: ['Giant abbey scoring stage space', 'Wide panoramic stereo imaging'], 
-        rhythm: ['Building 12/8 ostinato rhythm', 'Monumental downbeat impacts'], 
-        topic: 'An epic clash of civilizations across an ancient frontier' 
-      },
-      'Minimalism': { 
-        label: 'Minimalism', 
-        style: 'Neoclassical, Modern Minimalism', 
-        mood: 'Poignant, Meditative, Elegant', 
-        tempo: '72 BPM, A Minor', 
-        vocalType: 'instrumental', 
-        vocals: ['None - instrumental focus'], 
-        instruments: ['Concert grand piano with felt', 'Solo cello ostinato', 'Muted violin quartet'], 
-        production: ['Close-mic mechanical piano pedal noises', 'Warm wooden room decay'], 
-        rhythm: ['Repetitive hypnotic piano arpeggio', 'Rubato expressive phrasing'], 
-        topic: 'A single candle burning in a quiet stone chapel' 
-      },
-      'Deep Focus Flow': { 
-        label: 'Deep Focus Flow', 
-        style: 'Binaural Focus, Ambient Drone, Deep Flow', 
-        mood: 'Ultra-Focused, Tranquil, Infinite', 
-        tempo: '60 BPM, C Major', 
-        vocalType: 'instrumental', 
-        vocals: ['None - distraction-free focus'], 
-        instruments: ['Warm analog drone pad', 'Gentle singing bowl resonance', 'Subtle 10Hz binaural alpha pulse'], 
-        production: ['432 Hz warm concert pitch tuning', 'Zero sudden transients', 'Infinite seamless loop'], 
-        rhythm: ['Steady 60 BPM human resting pulse', 'Continuous smooth ambient drift'], 
-        topic: 'Entering pure uninterrupted deep work and laser focus' 
-      }
+      'Synthwave': { label: 'Synthwave', style: 'Synthwave, Darksynth, Outrun', mood: 'Nostalgic, Midnight, Neon', tempo: '118 BPM, F Minor', vocalType: 'male', vocals: ['Emotive falsetto lead', 'Reverb-gated vocal doubles'], instruments: ['Analog saw-wave synth lead', 'Gated snare drum', 'Pulsing arpeggiator bassline', 'LinnDrum'], production: ['80s gated reverb chamber', 'Analog tape saturation'], rhythm: ['Driving four-on-the-floor kick', '16th-note synth arpeggio pulse'], topic: 'Speeding through an empty neon city' },
+      'French House': { label: 'French House', style: 'French House, Nu-Disco', mood: 'Euphoric, Groovy, Luxurious', tempo: '124 BPM, D Minor', vocalType: 'vocoder', vocals: ['Vocoder robotic hooks', 'Talkbox harmonies'], instruments: ['Funky slap bass', 'Filtered vinyl sample loops', 'Analog synth brass'], production: ['Heavy sidechain compression pump', 'Resonant low-pass filter sweeps'], rhythm: ['Four-on-the-floor kick', 'Swung syncopated funk pocket'], topic: 'Glittering lights on a Parisian dancefloor' },
+      'Deep House': { label: 'Deep House', style: 'Deep House, Melodic Club', mood: 'Smooth, Hypnotic, Late-Night', tempo: '122 BPM, G Minor', vocalType: 'female', vocals: ['Breathy soulful lead', 'Soft pitched-down vocal chops'], instruments: ['Round subby M1 organ bass', 'Fender Rhodes electric piano', 'Crisp 909 percussion'], production: ['Sub-bass focus below 60Hz', 'Spacious club reverb'], rhythm: ['Gentle four-on-the-floor pulse', 'Swung 16th-note shaker groove'], topic: 'Floating through late-night ocean waves' },
+      'Melodic Techno': { label: 'Melodic Techno', style: 'Melodic Techno', mood: 'Hypnotic, Cinematic, Tense', tempo: '126 BPM, C Minor', vocalType: 'instrumental', vocals: ['Wordless ethereal vocal pad'], instruments: ['Rolling modular bass', 'Hypnotic pluck arpeggio', 'Massive reverb snare'], production: ['Long filter sweeps', 'Ultra-wide stereo panning'], rhythm: ['Relentless four-on-the-floor drive', 'Rolling bassline syncopation'], topic: 'A journey through deep interstellar frequencies' },
+      'Drum & Bass': { label: 'Drum & Bass', style: 'Liquid Drum & Bass, Jungle', mood: 'Energetic, Soaring, Futuristic', tempo: '174 BPM, F Minor', vocalType: 'female', vocals: ['Soulful high-register soprano', 'Pitched-up vocal chops'], instruments: ['Modulated Reese bass', 'Crisp chopped Amen breakbeat', 'Rhodes piano chords'], production: ['Sub-bass mono isolation', 'Fast stereo delay ping-pong'], rhythm: ['Lightning 174 BPM breakbeat pattern', 'Syncopated rolling snare shuffle'], topic: 'High-speed glide through digital horizons' },
+      'EDM Festival': { label: 'EDM Festival', style: 'Festival Progressive House', mood: 'Euphoric, Anthemic, Massive', tempo: '128 BPM, B Minor', vocalType: 'female', vocals: ['Anthemic soaring lead belting', 'Festival crowd choir'], instruments: ['Layered supersaw synth chords', 'Acoustic grand piano melody', 'Sub-frequency kick'], production: ['Extreme sidechain ducking', 'Massive stadium reverb wash'], rhythm: ['Pounding 128 BPM four-on-the-floor', 'Snare roll crescendo riser'], topic: 'Celebrating with ten thousand voices' },
+      'Ambient Chillwave': { label: 'Ambient Chillwave', style: 'Ambient, Chillwave, Downtempo', mood: 'Serene, Meditative, Weightless', tempo: '75 BPM, D Major', vocalType: 'instrumental', vocals: ['Soft wordless vocal breath'], instruments: ['Warm prophet synth pads', 'Clean delayed electric guitar arpeggios', 'Upright piano'], production: ['Infinite reverb decay tails', 'Binaural panning spatial field'], rhythm: ['Slow drifting ambient pulse', 'Unquantized brush percussion'], topic: 'Stillness at dawn on a quiet mountain ridge' },
+      'Melodic Trap': { label: 'Melodic Trap', style: 'Melodic Trap, R&B Rap', mood: 'Moody, Introspective, Heavy', tempo: '140 BPM, C# Minor', vocalType: 'male', vocals: ['Autotuned melodic sing-rap', 'Breathy falsetto ad-libs'], instruments: ['Deep sliding 808 sub bass', 'Minor key bell plucks', 'Fast rolling hi-hats'], production: ['Sub-bass soft clipping saturation', 'Dark low-pass filter on chords'], rhythm: ['Half-time snare on beat 3', 'Triplet 32nd-note hi-hat rolls'], topic: 'Reflecting on the climb and isolation' },
+      'Boom-Bap': { label: 'Boom-Bap', style: 'Boom-Bap, Jazz Rap', mood: 'Grounded, Gritty, Thoughtful', tempo: '90 BPM, Bb Minor', vocalType: 'male', vocals: ['Crisp articulate delivery', 'Soulful sampled hook'], instruments: ['Dusty upright bassline', 'Warm jazz guitar loop', 'Punchy acoustic kick and snare'], production: ['SP-1200 12-bit sampler crunch', 'Warm vinyl crackle and hiss'], rhythm: ['Swung unquantized head-nod rhythm', 'Laid-back pocket'], topic: 'Chronicles of city life and staying genuine' },
+      'Lo-Fi Hip-Hop': { label: 'Lo-Fi Hip-Hop', style: 'Lo-Fi Hip Hop, Chillhop', mood: 'Cozy, Nostalgic, Relaxed', tempo: '82 BPM, Eb Major', vocalType: 'instrumental', vocals: ['None - instrumental focus'], instruments: ['Detuned Rhodes electric piano', 'Felt upright piano', 'Muted electric bass'], production: ['Cassette tape wow and flutter', 'Low-pass filter at 8kHz', 'Vinyl surface dust'], rhythm: ['Drunk lazy swung drum groove', 'Gentle muted kick drum'], topic: 'Rain falling gently against the library window' },
+      'Contemporary Pop': { label: 'Contemporary Pop', style: 'Pop, Dance-Pop', mood: 'Catchy, Polished, Upbeat', tempo: '120 BPM, C Major', vocalType: 'female', vocals: ['Crystal clear lead vocal', 'Stacked radio pop harmonies'], instruments: ['Bright polysynth chords', 'Live bass guitar with synth layer', 'Modern hybrid drums'], production: ['Glossy high-end sparkle', 'Multiband radio-ready master'], rhythm: ['Driving four-on-the-floor pop pulse', 'Clap-stacked snare'], topic: 'Letting go of doubt and living fearlessly' },
+      'Alternative R&B': { label: 'Alternative R&B', style: 'Alternative R&B, Dark Soul', mood: 'Seductive, Moody, Intimate', tempo: '88 BPM, F# Minor', vocalType: 'female', vocals: ['Silky multi-octave range', 'Breathy intimate falsetto runs'], instruments: ['Warm electric piano with tremolo', 'Deep subby 808 bass', 'Atmospheric guitar swells'], production: ['Lush plate reverb space', 'Warm low-end saturation'], rhythm: ['Slow sensual half-time groove', 'Syncopated neo-soul hi-hats'], topic: 'Late-night confessions and undeniable attraction' },
+      'Neo-Soul': { label: 'Neo-Soul', style: 'Neo-Soul, Soul, Jazz-Funk', mood: 'Warm, Organic, Earthy', tempo: '86 BPM, E Minor', vocalType: 'female', vocals: ['Rich chest voice belt', 'Gospel-trained layered harmonies'], instruments: ['Vintage Rhodes Mark I', 'Groovy fingerstyle electric bass', 'Warm live drum kit'], production: ['Natural room tone acoustics', 'Analog tube warmth'], rhythm: ['Behind-the-beat pocket', 'Swung unquantized live drumming'], topic: 'Healing, self-love, and rhythm of life' },
+      'Alternative Rock': { label: 'Alternative Rock', style: 'Grunge, 90s Alternative Rock', mood: 'Raw, Angsty, Cathartic', tempo: '116 BPM, E Minor', vocalType: 'belting', vocals: ['Raspy strained lead vocal', 'Cracked emotional falsetto'], instruments: ['Distorted heavy guitars', 'Pounding acoustic drum kit', 'Overdriven melodic bass'], production: ['Quiet-to-loud dynamic contrasts', 'Vintage tape console grit'], rhythm: ['Heavy backbeat rock groove', 'Hard-hitting crash cymbals'], topic: 'Breaking through inner turmoil' },
+      'Modern Metalcore': { label: 'Modern Metalcore', style: 'Metalcore, Djent', mood: 'Aggressive, Massive, Cathartic', tempo: '150 BPM, Drop D', vocalType: 'belting', vocals: ['Guttural aggressive screams', 'Soaring anthemic clean melodic chorus'], instruments: ['Down-tuned 7-string palm-muted guitars', 'Thunderous double-kick drum blasts', 'Sub-frequency bass drops'], production: ['Ultra-tight gate on rhythm guitars', 'Massive low-end impact'], rhythm: ['Syncopated polyrhythmic djent riffs', 'Crushing half-time breakdown'], topic: 'Rising from ashes when everything was meant to break you' },
+      'Cinematic Hybrid': { label: 'Cinematic Hybrid', style: 'Cinematic Orchestral, Hybrid Trailer Score', mood: 'Epic, Heroic, Tense', tempo: '90 BPM, D Minor', vocalType: 'instrumental', vocals: ['Wordless Gregorian choir chant'], instruments: ['80-piece symphony string section', 'Massive Japanese taiko drums', 'Synthetic sub-bass braams'], production: ['Giant abbey scoring stage space', 'Wide panoramic stereo imaging'], rhythm: ['Building 12/8 ostinato rhythm', 'Monumental downbeat impacts'], topic: 'An epic clash of civilizations across an ancient frontier' },
+      'Minimalism': { label: 'Minimalism', style: 'Neoclassical, Modern Minimalism', mood: 'Poignant, Meditative, Elegant', tempo: '72 BPM, A Minor', vocalType: 'instrumental', vocals: ['None - instrumental focus'], instruments: ['Concert grand piano with felt', 'Solo cello ostinato', 'Muted violin quartet'], production: ['Close-mic mechanical piano pedal noises', 'Warm wooden room decay'], rhythm: ['Repetitive hypnotic piano arpeggio', 'Rubato expressive phrasing'], topic: 'A single candle burning in a quiet stone chapel' },
+      'Deep Focus Flow': { label: 'Deep Focus Flow', style: 'Binaural Focus, Ambient Drone, Deep Flow', mood: 'Ultra-Focused, Tranquil, Infinite', tempo: '60 BPM, C Major', vocalType: 'instrumental', vocals: ['None - distraction-free focus'], instruments: ['Warm analog drone pad', 'Gentle singing bowl resonance', 'Subtle 10Hz binaural alpha pulse'], production: ['432 Hz warm concert pitch tuning', 'Zero sudden transients', 'Infinite seamless loop'], rhythm: ['Steady 60 BPM human resting pulse', 'Continuous smooth ambient drift'], topic: 'Entering pure uninterrupted deep work and laser focus' }
     };
     
     const CATEGORY_TEMPLATES = {
-      'Pop & Contemporary': { 
-        mood: 'Catchy, Polished, Upbeat', tempo: '118 BPM, C Major', vocalType: 'female', 
-        vocals: ['Crystal clear lead vocal', 'Stacked pop harmonies', 'Airy ad-lib layers'], 
-        instruments: ['Bright synth chords', 'Punchy pop bassline', 'Modern hybrid drum kit'], 
-        production: ['Glossy radio-ready master', 'Sparkling high-end sheen'], 
-        rhythm: ['Driving pop pulse', 'Clap-stacked snare backbeat'], 
-        topic: 'Chasing a feeling that will not let go' 
-      },
-      'R&B, Soul & Funk': { 
-        mood: 'Smooth, Soulful, Groovy', tempo: '92 BPM, F Minor', vocalType: 'female', 
-        vocals: ['Rich soulful lead vocal', 'Gospel-trained harmony stack'], 
-        instruments: ['Warm electric piano', 'Groovy fingerstyle bass', 'Live funky drum kit'], 
-        production: ['Warm analog saturation', 'Natural room reverb'], 
-        rhythm: ['Behind-the-beat pocket groove', 'Syncopated funk hi-hats'], 
-        topic: 'Love, longing, and finding your rhythm' 
-      },
-      'Hip-Hop & Rap': { 
-        mood: 'Confident, Gritty, Rhythmic', tempo: '95 BPM, C Minor', vocalType: 'male', 
-        vocals: ['Confident rhythmic delivery', 'Ad-lib hype vocal stack'], 
-        instruments: ['Deep 808 sub bass', 'Rolling hi-hats', 'Sampled loop or keys'], 
-        production: ['Punchy low-end mix', 'Tight dry vocal chain'], 
-        rhythm: ['Syncopated trap-influenced groove', 'Head-nod boom-bap pocket'], 
-        topic: 'Grinding for respect and staying true to the come-up' 
-      },
-      'Electronic & Dance': { 
-        mood: 'Energetic, Hypnotic, Euphoric', tempo: '124 BPM, A Minor', vocalType: 'instrumental', 
-        vocals: ['Wordless vocal chop hook', 'Processed vocoder phrase'], 
-        instruments: ['Pulsing synth bassline', 'Layered synth arpeggio', 'Crisp electronic percussion'], 
-        production: ['Sidechain-pumped mix', 'Wide stereo synth field'], 
-        rhythm: ['Four-on-the-floor drive', 'Rolling 16th-note synth pulse'], 
-        topic: 'Losing yourself on the dancefloor as the lights blur' 
-      },
-      'Rock & Alternative': { 
-        mood: 'Raw, Energetic, Cathartic', tempo: '128 BPM, E Minor', vocalType: 'belting', 
-        vocals: ['Raw belting lead vocal', 'Gang-vocal group shout'], 
-        instruments: ['Distorted electric guitars', 'Driving bass guitar', 'Live acoustic drum kit'], 
-        production: ['Punchy guitar-forward mix', 'Room-mic drum ambience'], 
-        rhythm: ['Hard-driving rock backbeat', 'Crash-heavy chorus lift'], 
-        topic: 'Breaking free and refusing to be held down' 
-      },
-      'Metal': { 
-        mood: 'Aggressive, Intense, Powerful', tempo: '150 BPM, Drop D', vocalType: 'belting', 
-        vocals: ['Aggressive screamed verses', 'Soaring melodic chorus'], 
-        instruments: ['Down-tuned distorted guitars', 'Double-kick drum blasts', 'Heavy palm-muted riffs'], 
-        production: ['Tight high-gain guitar tone', 'Massive low-end impact'], 
-        rhythm: ['Syncopated breakdown riffing', 'Relentless double-kick pattern'], 
-        topic: 'Rising up through pain and refusing to break' 
-      },
-      'Country, Folk & Roots': { 
-        mood: 'Heartfelt, Earthy, Nostalgic', tempo: '96 BPM, G Major', vocalType: 'male', 
-        vocals: ['Warm heartfelt lead vocal', 'Close harmony duet'], 
-        instruments: ['Acoustic guitar strumming', 'Pedal steel guitar', 'Upright bass and brushed drums'], 
-        production: ['Warm natural room sound', 'Light analog tape warmth'], 
-        rhythm: ['Easy rolling backbeat', 'Front-porch acoustic groove'], 
-        topic: 'Small towns, long roads, and the people who matter' 
-      },
-      'Jazz & Latin': { 
-        mood: 'Sultry, Sophisticated, Warm', tempo: '104 BPM, D Minor', vocalType: 'female', 
-        vocals: ['Sultry jazz-inflected lead', 'Call-and-response harmony'], 
-        instruments: ['Warm upright bass', 'Brushed jazz drum kit', 'Nylon-string or piano comping'], 
-        production: ['Warm intimate room mic', 'Natural dynamic mix'], 
-        rhythm: ['Swung syncopated groove', 'Latin clave-inspired pulse'], 
-        topic: 'A slow dance under warm evening light' 
-      },
-      'Reggae & Global': { 
-        mood: 'Relaxed, Uplifting, Communal', tempo: '82 BPM, A Major', vocalType: 'male', 
-        vocals: ['Laid-back melodic lead', 'Call-and-response chorus'], 
-        instruments: ['Skanking off-beat guitar', 'Round dub bassline', 'Loose one-drop drum groove'], 
-        production: ['Deep dub-style reverb and delay', 'Warm analog low-end'], 
-        rhythm: ['Classic one-drop reggae rhythm', 'Off-beat guitar skank'], 
-        topic: 'Unity, sunshine, and rising above hard times' 
-      },
-      'Cinematic & Instrumental': { 
-        mood: 'Epic, Emotive, Atmospheric', tempo: '80 BPM, D Minor', vocalType: 'instrumental', 
-        vocals: ['None - instrumental focus'], 
-        instruments: ['Sweeping string section', 'Grand piano motif', 'Deep cinematic sub-bass'], 
-        production: ['Wide orchestral stereo image', 'Spacious hall reverb'], 
-        rhythm: ['Building orchestral ostinato', 'Slow expressive rubato'], 
-        topic: 'A sweeping journey across vast, unknown terrain' 
-      }
+      'Pop & Contemporary': { mood: 'Catchy, Polished, Upbeat', tempo: '118 BPM, C Major', vocalType: 'female', vocals: ['Crystal clear lead vocal', 'Stacked pop harmonies', 'Airy ad-lib layers'], instruments: ['Bright synth chords', 'Punchy pop bassline', 'Modern hybrid drum kit'], production: ['Glossy radio-ready master', 'Sparkling high-end sheen'], rhythm: ['Driving pop pulse', 'Clap-stacked snare backbeat'], topic: 'Chasing a feeling that will not let go' },
+      'R&B, Soul & Funk': { mood: 'Smooth, Soulful, Groovy', tempo: '92 BPM, F Minor', vocalType: 'female', vocals: ['Rich soulful lead vocal', 'Gospel-trained harmony stack'], instruments: ['Warm electric piano', 'Groovy fingerstyle bass', 'Live funky drum kit'], production: ['Warm analog saturation', 'Natural room reverb'], rhythm: ['Behind-the-beat pocket groove', 'Syncopated funk hi-hats'], topic: 'Love, longing, and finding your rhythm' },
+      'Hip-Hop & Rap': { mood: 'Confident, Gritty, Rhythmic', tempo: '95 BPM, C Minor', vocalType: 'male', vocals: ['Confident rhythmic delivery', 'Ad-lib hype vocal stack'], instruments: ['Deep 808 sub bass', 'Rolling hi-hats', 'Sampled loop or keys'], production: ['Punchy low-end mix', 'Tight dry vocal chain'], rhythm: ['Syncopated trap-influenced groove', 'Head-nod boom-bap pocket'], topic: 'Grinding for respect and staying true to the come-up' },
+      'Electronic & Dance': { mood: 'Energetic, Hypnotic, Euphoric', tempo: '124 BPM, A Minor', vocalType: 'instrumental', vocals: ['Wordless vocal chop hook', 'Processed vocoder phrase'], instruments: ['Pulsing synth bassline', 'Layered synth arpeggio', 'Crisp electronic percussion'], production: ['Sidechain-pumped mix', 'Wide stereo synth field'], rhythm: ['Four-on-the-floor drive', 'Rolling 16th-note synth pulse'], topic: 'Losing yourself on the dancefloor as the lights blur' },
+      'Rock & Alternative': { mood: 'Raw, Energetic, Cathartic', tempo: '128 BPM, E Minor', vocalType: 'belting', vocals: ['Raw belting lead vocal', 'Gang-vocal group shout'], instruments: ['Distorted electric guitars', 'Driving bass guitar', 'Live acoustic drum kit'], production: ['Punchy guitar-forward mix', 'Room-mic drum ambience'], rhythm: ['Hard-driving rock backbeat', 'Crash-heavy chorus lift'], topic: 'Breaking free and refusing to be held down' },
+      'Metal': { mood: 'Aggressive, Intense, Powerful', tempo: '150 BPM, Drop D', vocalType: 'belting', vocals: ['Aggressive screamed verses', 'Soaring melodic chorus'], instruments: ['Down-tuned distorted guitars', 'Double-kick drum blasts', 'Heavy palm-muted riffs'], production: ['Tight high-gain guitar tone', 'Massive low-end impact'], rhythm: ['Syncopated breakdown riffing', 'Relentless double-kick pattern'], topic: 'Rising up through pain and refusing to break' },
+      'Country, Folk & Roots': { mood: 'Heartfelt, Earthy, Nostalgic', tempo: '96 BPM, G Major', vocalType: 'male', vocals: ['Warm heartfelt lead vocal', 'Close harmony duet'], instruments: ['Acoustic guitar strumming', 'Pedal steel guitar', 'Upright bass and brushed drums'], production: ['Warm natural room sound', 'Light analog tape warmth'], rhythm: ['Easy rolling backbeat', 'Front-porch acoustic groove'], topic: 'Small towns, long roads, and the people who matter' },
+      'Jazz & Latin': { mood: 'Sultry, Sophisticated, Warm', tempo: '104 BPM, D Minor', vocalType: 'female', vocals: ['Sultry jazz-inflected lead', 'Call-and-response harmony'], instruments: ['Warm upright bass', 'Brushed jazz drum kit', 'Nylon-string or piano comping'], production: ['Warm intimate room mic', 'Natural dynamic mix'], rhythm: ['Swung syncopated groove', 'Latin clave-inspired pulse'], topic: 'A slow dance under warm evening light' },
+      'Reggae & Global': { mood: 'Relaxed, Uplifting, Communal', tempo: '82 BPM, A Major', vocalType: 'male', vocals: ['Laid-back melodic lead', 'Call-and-response chorus'], instruments: ['Skanking off-beat guitar', 'Round dub bassline', 'Loose one-drop drum groove'], production: ['Deep dub-style reverb and delay', 'Warm analog low-end'], rhythm: ['Classic one-drop reggae rhythm', 'Off-beat guitar skank'], topic: 'Unity, sunshine, and rising above hard times' },
+      'Cinematic & Instrumental': { mood: 'Epic, Emotive, Atmospheric', tempo: '80 BPM, D Minor', vocalType: 'instrumental', vocals: ['None - instrumental focus'], instruments: ['Sweeping string section', 'Grand piano motif', 'Deep cinematic sub-bass'], production: ['Wide orchestral stereo image', 'Spacious hall reverb'], rhythm: ['Building orchestral ostinato', 'Slow expressive rubato'], topic: 'A sweeping journey across vast, unknown terrain' }
     };
 
     const FALLBACK_LAYER_VARIANTS = {
-      'Pop & Contemporary': [ 
-        ['Bright synth plucks', 'Tight electronic drums'], ['Airy pad chords', 'Punchy pop bass'], 
-        ['Glossy piano stabs', 'Crisp programmed percussion'], ['Muted rhythm guitar', 'Warm synth bass'], 
-        ['Bell-like keys', 'Snappy clap and kick groove'], ['Dreamy polysynths', 'Soft electronic percussion'], 
-        ['Acoustic piano accents', 'Deep modern pop bass'], ['Shimmering arpeggiator', 'Dry punchy drums'], 
-        ['Vocal-chop synth hook', 'Round sub bass'], ['Clean electric guitar', 'Bright drum-machine groove'], 
-        ['Analog synth strings', 'Tight pop kick and snare'], ['Plucked digital keys', 'Bouncy synth bass'], 
-        ['Wide chorus guitar', 'Layered electronic drums'], ['Soft felt piano', 'Subtle synth pulse'] 
+      'Pop & Contemporary': [
+        ['Bright synth plucks', 'Tight electronic drums'], ['Airy pad chords', 'Punchy pop bass'],
+        ['Glossy piano stabs', 'Crisp programmed percussion'], ['Muted rhythm guitar', 'Warm synth bass'],
+        ['Bell-like keys', 'Snappy clap and kick groove'], ['Dreamy polysynths', 'Soft electronic percussion'],
+        ['Acoustic piano accents', 'Deep modern pop bass'], ['Shimmering arpeggiator', 'Dry punchy drums'],
+        ['Vocal-chop synth hook', 'Round sub bass'], ['Clean electric guitar', 'Bright drum-machine groove'],
+        ['Analog synth strings', 'Tight pop kick and snare'], ['Plucked digital keys', 'Bouncy synth bass'],
+        ['Wide chorus guitar', 'Layered electronic drums'], ['Soft felt piano', 'Subtle synth pulse']
       ],
-      'R&B, Soul & Funk': [ 
-        ['Rhodes electric piano', 'Round fingerstyle bass'], ['Clavinet funk stabs', 'Dry pocket drums'], 
-        ['Wurlitzer chords', 'Muted electric bass'], ['Hammond organ swells', 'Ghost-note drum groove'], 
-        ['Warm synth keys', 'Deep soul bass'], ['Clean guitar comping', 'Loose funk drums'], 
-        ['Moody electric piano', 'Subby bass groove'], ['Talkbox-style synth lead', 'Tight disco-funk drums'], 
-        ['Vintage string pad', 'Syncopated bass guitar'], ['Soft organ chords', 'Brush-and-stick pocket drums'], 
-        ['Filtered synth chords', 'Slap bass accents'], ['Piano soul fills', 'Live hi-hat pocket'] 
+      'R&B, Soul & Funk': [
+        ['Rhodes electric piano', 'Round fingerstyle bass'], ['Clavinet funk stabs', 'Dry pocket drums'],
+        ['Wurlitzer chords', 'Muted electric bass'], ['Hammond organ swells', 'Ghost-note drum groove'],
+        ['Warm synth keys', 'Deep soul bass'], ['Clean guitar comping', 'Loose funk drums'],
+        ['Moody electric piano', 'Subby bass groove'], ['Talkbox-style synth lead', 'Tight disco-funk drums'],
+        ['Vintage string pad', 'Syncopated bass guitar'], ['Soft organ chords', 'Brush-and-stick pocket drums'],
+        ['Filtered synth chords', 'Slap bass accents'], ['Piano soul fills', 'Live hi-hat pocket']
       ],
-      'Hip-Hop & Rap': [ 
-        ['Deep 808 bass', 'Tight trap hi-hats'], ['Dusty sampled piano', 'Boom-bap drum break'], 
-        ['Dark synth bass', 'Sparse drill percussion'], ['Vinyl-sampled keys', 'Loose kick-and-snare pocket'], 
-        ['Bell synth motif', 'Rolling triplet hats'], ['Muted guitar sample', 'Heavy sub kick'], 
-        ['Warm Rhodes sample', 'Crisp rimshot groove'], ['Moody string sample', 'Syncopated 808 pattern'], 
-        ['Chopped vocal texture', 'Dry punchy drums'], ['Analog bass synth', 'Off-grid hip-hop hats'], 
-        ['Jazzy piano loop', 'Snare-forward boom-bap kit'], ['Distorted bass texture', 'Rapid drill hats'], 
-        ['Flute sample lead', 'Deep kick and clap'], ['Lo-fi cassette keys', 'Dusty drum break'] 
+      'Hip-Hop & Rap': [
+        ['Deep 808 bass', 'Tight trap hi-hats'], ['Dusty sampled piano', 'Boom-bap drum break'],
+        ['Dark synth bass', 'Sparse drill percussion'], ['Vinyl-sampled keys', 'Loose kick-and-snare pocket'],
+        ['Bell synth motif', 'Rolling triplet hats'], ['Muted guitar sample', 'Heavy sub kick'],
+        ['Warm Rhodes sample', 'Crisp rimshot groove'], ['Moody string sample', 'Syncopated 808 pattern'],
+        ['Chopped vocal texture', 'Dry punchy drums'], ['Analog bass synth', 'Off-grid hip-hop hats'],
+        ['Jazzy piano loop', 'Snare-forward boom-bap kit'], ['Distorted bass texture', 'Rapid drill hats'],
+        ['Flute sample lead', 'Deep kick and clap'], ['Lo-fi cassette keys', 'Dusty drum break']
       ],
-      'Electronic & Dance': [ 
-        ['Analog synth bass', 'Four-on-the-floor kick'], ['Bright trance pluck', 'Rolling club percussion'], 
-        ['Deep house organ', 'Shuffled hi-hat groove'], ['Acid bass synth', 'Crisp techno hats'], 
-        ['Granular pad texture', 'Breakbeat drum kit'], ['FM bell synth', 'Tight electro drums'], 
-        ['Vocoder chord stack', 'Pumping house kick'], ['Sawtooth lead synth', 'Driving gated drums'], 
-        ['Arpeggiated synth sequence', 'Sidechained bass pulse'], ['Dub siren synth', 'Skittering garage drums'], 
-        ['Glassy digital pad', 'Jungle breakbeat kit'], ['Wavetable bass growl', 'Half-time electronic drums'], 
-        ['Warm tape synth', 'Loose downtempo percussion'], ['Noisy industrial synth', 'Metallic machine drums'], 
-        ['Retro string synth', 'Punchy electro kick'], ['Digital bell arpeggio', 'Deep sub-bass pulse'], 
-        ['Filtered vocal chop', 'Disco-house drum groove'], ['FM bass sequence', 'Tight breakbeat snare'], 
-        ['Lush ambient pad', 'Soft electronic pulse'], ['Bitcrushed lead synth', 'Rigid drum-machine beat'], 
-        ['Detuned polysynth', 'Rolling rave percussion'], ['Neon synth brass', 'Driving dance kick'], 
-        ['Subtle tape-warp pad', 'Minimal electronic clicks'] 
+      'Electronic & Dance': [
+        ['Analog synth bass', 'Four-on-the-floor kick'], ['Bright trance pluck', 'Rolling club percussion'],
+        ['Deep house organ', 'Shuffled hi-hat groove'], ['Acid bass synth', 'Crisp techno hats'],
+        ['Granular pad texture', 'Breakbeat drum kit'], ['FM bell synth', 'Tight electro drums'],
+        ['Vocoder chord stack', 'Pumping house kick'], ['Sawtooth lead synth', 'Driving gated drums'],
+        ['Arpeggiated synth sequence', 'Sidechained bass pulse'], ['Dub siren synth', 'Skittering garage drums'],
+        ['Glassy digital pad', 'Jungle breakbeat kit'], ['Wavetable bass growl', 'Half-time electronic drums'],
+        ['Warm tape synth', 'Loose downtempo percussion'], ['Noisy industrial synth', 'Metallic machine drums'],
+        ['Retro string synth', 'Punchy electro kick'], ['Digital bell arpeggio', 'Deep sub-bass pulse'],
+        ['Filtered vocal chop', 'Disco-house drum groove'], ['FM bass sequence', 'Tight breakbeat snare'],
+        ['Lush ambient pad', 'Soft electronic pulse'], ['Bitcrushed lead synth', 'Rigid drum-machine beat'],
+        ['Detuned polysynth', 'Rolling rave percussion'], ['Neon synth brass', 'Driving dance kick'],
+        ['Subtle tape-warp pad', 'Minimal electronic clicks']
       ],
-      'Rock & Alternative': [ 
-        ['Crunch electric guitar', 'Live drum kit'], ['Jangly clean guitar', 'Driving bass guitar'], 
-        ['Fuzz guitar wall', 'Roomy acoustic drums'], ['Palm-muted guitar riff', 'Punchy rock bass'], 
-        ['Arpeggiated clean guitar', 'Snare-forward drum kit'], ['Phaser guitar texture', 'Tom-heavy live drums'], 
-        ['Octave guitar lead', 'Overdriven bass guitar'], ['Feedback guitar swell', 'Wide room drums'], 
-        ['Acoustic-electric guitar', 'Dry indie drum kit'], ['Distorted power chords', 'Crash-heavy chorus drums'], 
-        ['Tremolo guitar line', 'Steady bass-and-kick drive'], ['Chorus-soaked guitar', 'Loose garage drums'], 
-        ['Baritone guitar riff', 'Deep live bass'], ['12-string guitar shimmer', 'Natural room drums'], 
-        ['Muted guitar pulse', 'Tight alternative rock kit'], ['Lead guitar harmonics', 'Floor-tom accents'] 
+      'Rock & Alternative': [
+        ['Crunch electric guitar', 'Live drum kit'], ['Jangly clean guitar', 'Driving bass guitar'],
+        ['Fuzz guitar wall', 'Roomy acoustic drums'], ['Palm-muted guitar riff', 'Punchy rock bass'],
+        ['Arpeggiated clean guitar', 'Snare-forward drum kit'], ['Phaser guitar texture', 'Tom-heavy live drums'],
+        ['Octave guitar lead', 'Overdriven bass guitar'], ['Feedback guitar swell', 'Wide room drums'],
+        ['Acoustic-electric guitar', 'Dry indie drum kit'], ['Distorted power chords', 'Crash-heavy chorus drums'],
+        ['Tremolo guitar line', 'Steady bass-and-kick drive'], ['Chorus-soaked guitar', 'Loose garage drums'],
+        ['Baritone guitar riff', 'Deep live bass'], ['12-string guitar shimmer', 'Natural room drums'],
+        ['Muted guitar pulse', 'Tight alternative rock kit'], ['Lead guitar harmonics', 'Floor-tom accents']
       ],
-      'Metal': [ 
-        ['Down-tuned rhythm guitars', 'Double-kick drums'], ['Palm-muted guitars', 'Crushing bass guitar'], 
-        ['Tremolo-picked guitars', 'Blast-beat drums'], ['Djent guitar chugs', 'Tight kick drum pattern'], 
-        ['Harmonized lead guitars', 'Thunderous toms'], ['Blackened guitar tremolo', 'Rapid double-kick drums'], 
-        ['Doom guitar drones', 'Slow heavy tom groove'], ['Metalcore guitar breakdown', 'Punchy kick-and-snare'], 
-        ['High-gain guitar harmonies', 'Driving bass drum'], ['Industrial metal synth layer', 'Rigid heavy drums'], 
-        ['Progressive lead guitar', 'Complex live drum kit'], ['Sludge guitar fuzz', 'Huge low-tuned bass'] 
+      'Metal': [
+        ['Down-tuned rhythm guitars', 'Double-kick drums'], ['Palm-muted guitars', 'Crushing bass guitar'],
+        ['Tremolo-picked guitars', 'Blast-beat drums'], ['Djent guitar chugs', 'Tight kick drum pattern'],
+        ['Harmonized lead guitars', 'Thunderous toms'], ['Blackened guitar tremolo', 'Rapid double-kick drums'],
+        ['Doom guitar drones', 'Slow heavy tom groove'], ['Metalcore guitar breakdown', 'Punchy kick-and-snare'],
+        ['High-gain guitar harmonies', 'Driving bass drum'], ['Industrial metal synth layer', 'Rigid heavy drums'],
+        ['Progressive lead guitar', 'Complex live drum kit'], ['Sludge guitar fuzz', 'Huge low-tuned bass']
       ],
-      'Country, Folk & Roots': [ 
-        ['Acoustic guitar picking', 'Brush-and-kick country drums'], ['Pedal steel phrases', 'Upright bass pulse'], 
-        ['Banjo rolls', 'Acoustic rhythm guitar'], ['Mandolin chop', 'Walking upright bass'], 
-        ['Fiddle lead', 'Snare-and-kick two-step'], ['Dobro slide guitar', 'Warm bass fiddle'], 
-        ['12-string acoustic guitar', 'Light brush drums'], ['Lap steel swells', 'Electric bass groove'], 
-        ['Harmonica fills', 'Front-porch acoustic rhythm'], ['Honky-tonk piano', 'Country shuffle drums'], 
-        ['Acoustic guitar strum', 'Fiddle-and-bass groove'], ['Resonator guitar', 'Loose roots drum kit'] 
+      'Country, Folk & Roots': [
+        ['Acoustic guitar picking', 'Brush-and-kick country drums'], ['Pedal steel phrases', 'Upright bass pulse'],
+        ['Banjo rolls', 'Acoustic rhythm guitar'], ['Mandolin chop', 'Walking upright bass'],
+        ['Fiddle lead', 'Snare-and-kick two-step'], ['Dobro slide guitar', 'Warm bass fiddle'],
+        ['12-string acoustic guitar', 'Light brush drums'], ['Lap steel swells', 'Electric bass groove'],
+        ['Harmonica fills', 'Front-porch acoustic rhythm'], ['Honky-tonk piano', 'Country shuffle drums'],
+        ['Acoustic guitar strum', 'Fiddle-and-bass groove'], ['Resonator guitar', 'Loose roots drum kit']
       ],
-      'Jazz & Latin': [ 
-        ['Upright bass walking line', 'Brush jazz drums'], ['Nylon-string guitar', 'Latin percussion'], 
-        ['Rhodes jazz chords', 'Ride-cymbal swing'], ['Muted trumpet lead', 'Upright bass pulse'], 
-        ['Saxophone melody', 'Brush-and-snare kit'], ['Piano montuno', 'Congas and bongos'], 
-        ['Hollow-body guitar', 'Jazz ride groove'], ['Vibraphone chords', 'Soft upright bass'], 
-        ['Flugelhorn phrases', 'Brushes and rim clicks'], ['Organ jazz comping', 'Swinging walking bass'], 
-        ['Marimba patterns', 'Clave-led percussion'], ['Piano ballad voicings', 'Light jazz drum kit'] 
+      'Jazz & Latin': [
+        ['Upright bass walking line', 'Brush jazz drums'], ['Nylon-string guitar', 'Latin percussion'],
+        ['Rhodes jazz chords', 'Ride-cymbal swing'], ['Muted trumpet lead', 'Upright bass pulse'],
+        ['Saxophone melody', 'Brush-and-snare kit'], ['Piano montuno', 'Congas and bongos'],
+        ['Hollow-body guitar', 'Jazz ride groove'], ['Vibraphone chords', 'Soft upright bass'],
+        ['Flugelhorn phrases', 'Brushes and rim clicks'], ['Organ jazz comping', 'Swinging walking bass'],
+        ['Marimba patterns', 'Clave-led percussion'], ['Piano ballad voicings', 'Light jazz drum kit']
       ],
-      'Reggae & Global': [ 
-        ['Skanking electric guitar', 'One-drop drum groove'], ['Dub bassline', 'Off-beat guitar chops'], 
-        ['Organ bubble chords', 'Deep reggae drums'], ['Nyabinghi hand percussion', 'Round bass guitar'], 
-        ['Muted guitar skank', 'Dancehall kick-and-snare'], ['Melodic marimba', 'Afrobeat drum groove'], 
-        ['Brass section stabs', 'Syncopated global percussion'], ['Palm-muted guitar', 'Dub echo bass'], 
-        ['Kalimba patterns', 'Loose hand percussion'], ['Clean reggae guitar', 'Roots drum kit'], 
-        ['Synth organ bubble', 'Dancehall percussion'], ['Highlife guitar lines', 'Cross-rhythmic drums'] 
+      'Reggae & Global': [
+        ['Skanking electric guitar', 'One-drop drum groove'], ['Dub bassline', 'Off-beat guitar chops'],
+        ['Organ bubble chords', 'Deep reggae drums'], ['Nyabinghi hand percussion', 'Round bass guitar'],
+        ['Muted guitar skank', 'Dancehall kick-and-snare'], ['Melodic marimba', 'Afrobeat drum groove'],
+        ['Brass section stabs', 'Syncopated global percussion'], ['Palm-muted guitar', 'Dub echo bass'],
+        ['Kalimba patterns', 'Loose hand percussion'], ['Clean reggae guitar', 'Roots drum kit'],
+        ['Synth organ bubble', 'Dancehall percussion'], ['Highlife guitar lines', 'Cross-rhythmic drums']
       ],
-      'Cinematic & Instrumental': [ 
-        ['Piano ostinato', 'Warm string ensemble'], ['Cello pulse', 'Soft piano motif'], 
-        ['Brass swells', 'Low orchestral percussion'], ['Solo violin line', 'Deep cinematic drones'], 
-        ['Plucked harp texture', 'String ostinato'], ['Woodwind ensemble', 'Timpani accents'], 
-        ['Analog cinematic pad', 'Grand piano chords'], ['Low cello drones', 'Soft mallet percussion'], 
-        ['Prepared piano texture', 'Sparse string harmonics'], ['Choir pad', 'Orchestral bass drum'], 
-        ['Minimalist piano pattern', 'Muted string pulse'], ['Ambient synth bed', 'Subtle mallet motif'] 
+      'Cinematic & Instrumental': [
+        ['Piano ostinato', 'Warm string ensemble'], ['Cello pulse', 'Soft piano motif'],
+        ['Brass swells', 'Low orchestral percussion'], ['Solo violin line', 'Deep cinematic drones'],
+        ['Plucked harp texture', 'String ostinato'], ['Woodwind ensemble', 'Timpani accents'],
+        ['Analog cinematic pad', 'Grand piano chords'], ['Low cello drones', 'Soft mallet percussion'],
+        ['Prepared piano texture', 'Sparse string harmonics'], ['Choir pad', 'Orchestral bass drum'],
+        ['Minimalist piano pattern', 'Muted string pulse'], ['Ambient synth bed', 'Subtle mallet motif']
       ]
     };
 
@@ -900,11 +631,22 @@
         let variantIndex = 0;
         Array.from(group.querySelectorAll('option')).forEach(opt => {
           const name = (opt.value || opt.textContent || '').trim();
-          if (!name || GENRE_PROFILES[name]) return; 
-          const layerInstruments = variants.length ? variants[variantIndex++ % variants.length].slice() : template.instruments.slice(0, 2);
+          if (!name || GENRE_PROFILES[name]) return;
+          const layerInstruments = variants.length
+            ? variants[variantIndex++ % variants.length].slice()
+            : template.instruments.slice(0, 2);
           GENRE_PROFILES[name] = {
-            label: name, style: `${name}, ${category}`, mood: template.mood, tempo: template.tempo, vocalType: template.vocalType,
-            vocals: template.vocals.slice(), instruments: template.instruments.slice(), layerInstruments, production: template.production.slice(), rhythm: template.rhythm.slice(), topic: template.topic
+            label: name,
+            style: `${name}, ${category}`,
+            mood: template.mood,
+            tempo: template.tempo,
+            vocalType: template.vocalType,
+            vocals: template.vocals.slice(),
+            instruments: template.instruments.slice(),
+            layerInstruments,
+            production: template.production.slice(),
+            rhythm: template.rhythm.slice(),
+            topic: template.topic
           };
         });
       });
@@ -914,75 +656,184 @@
       if (!name) return null;
       if (GENRE_PROFILES[name]) return GENRE_PROFILES[name];
       const lower = name.toLowerCase().trim();
-      for (const k in GENRE_PROFILES) { if (k.toLowerCase() === lower) return GENRE_PROFILES[k]; }
+      for (const k in GENRE_PROFILES) {
+        if (k.toLowerCase() === lower) return GENRE_PROFILES[k];
+      }
+      for (const k in GENRE_PROFILES) {
+        if (lower.includes(k.toLowerCase()) || k.toLowerCase().includes(lower)) return GENRE_PROFILES[k];
+      }
       return null;
     }
 
     function fuseGenreProfiles(names) {
-      const seen = new Set(); const profiles = [];
-      names.forEach(n => { const p = getGenreProfile(n); if (p && !seen.has(p.label)) { seen.add(p.label); profiles.push(p); } });
-      if (!profiles.length) return null; if (profiles.length === 1) return profiles[0];
+      const seen = new Set();
+      const profiles = [];
+      names.forEach(n => {
+        const p = getGenreProfile(n);
+        if (p && !seen.has(p.label)) { seen.add(p.label); profiles.push(p); }
+      });
+      if (!profiles.length) return null;
+      if (profiles.length === 1) return profiles[0];
+
       const mergeDescriptors = (arr) => {
         const s = new Set(); const out = [];
-        arr.forEach(str => (str || '').split(',').map(x => x.trim()).forEach(piece => { if (piece && !s.has(piece.toLowerCase())) { s.add(piece.toLowerCase()); out.push(piece); } }));
+        arr.forEach(str => (str || '').split(',').map(x => x.trim()).forEach(piece => {
+          if (piece && !s.has(piece.toLowerCase())) { s.add(piece.toLowerCase()); out.push(piece); }
+        }));
         return out.join(', ');
       };
+
       const mergeTags = (key, perGenre = 3, cap = 6) => {
         const s = new Set(); const out = [];
         for (let i = 0; i < perGenre && out.length < cap; i++) {
-          for (const p of profiles) { const tag = (p[key] || [])[i]; if (tag && !s.has(tag.toLowerCase())) { s.add(tag.toLowerCase()); out.push(tag); if (out.length >= cap) break; } }
+          for (const p of profiles) {
+            const tag = (p[key] || [])[i];
+            if (tag && !s.has(tag.toLowerCase())) { s.add(tag.toLowerCase()); out.push(tag); if (out.length >= cap) break; }
+          }
         }
         return out;
       };
-      const mode = $('fuseBlendMode').value;
-      let tempo = profiles[0].tempo; let vocalType = profiles[0].vocalType;
-      if (mode === 'average') {
-        const bpms = profiles.map(p => { const m = String(p.tempo||'').match(/(\d+)\s*BPM/i); return m ? Number(m[1]) : null; }).filter(b => b != null);
-        if (bpms.length) { const avg = Math.round(bpms.reduce((a, b) => a + b, 0) / bpms.length); tempo = `${avg} BPM (avg)`; }
-        if (new Set(profiles.map(p => p.vocalType)).size > 1) vocalType = 'duet';
-      }
+
+      const { tempo, vocalType } = resolveTempoVocal(profiles);
+
       return {
-        label: profiles.map(p => p.label).join(' × ') + ' Fusion', style: mergeDescriptors(profiles.map(p => p.style)), mood: mergeDescriptors(profiles.map(p => p.mood)),
-        tempo, vocalType, vocals: mergeTags('vocals'), instruments: mergeTags('instruments'), production: mergeTags('production'), rhythm: mergeTags('rhythm'), topic: profiles.map(p => p.topic).join(' — meets — ')
+        label: profiles.map(p => p.label).join(' × ') + ' Fusion',
+        style: mergeDescriptors(profiles.map(p => p.style)),
+        mood: mergeDescriptors(profiles.map(p => p.mood)),
+        tempo,
+        vocalType,
+        vocals: mergeTags('vocals'),
+        instruments: mergeTags('instruments'),
+        production: mergeTags('production'),
+        rhythm: mergeTags('rhythm'),
+        topic: profiles.map(p => p.topic).join(' — meets — ')
       };
     }
 
-    function getFuseSelectValues() { return Array.from(document.querySelectorAll('.fuse-select')).map(s => s.value).filter(Boolean); }
-    function clearFuseSlots() { $('fuseSlots').innerHTML = ''; }
+    function parseBPM(tempoStr) {
+      const m = String(tempoStr || '').match(/(\d+)\s*BPM/i);
+      return m ? Number(m[1]) : null;
+    }
+
+    function resolveTempoVocal(profiles) {
+      const mode = $('fuseBlendMode') ? $('fuseBlendMode').value : 'primary';
+      if (profiles.length < 2 || mode === 'primary') {
+        return { tempo: profiles[0].tempo, vocalType: profiles[0].vocalType };
+      }
+      if (mode === 'energy' || mode === 'calm') {
+        let winner = profiles[0];
+        let winnerBPM = parseBPM(winner.tempo);
+        for (const p of profiles.slice(1)) {
+          const bpm = parseBPM(p.tempo);
+          if (bpm == null) continue;
+          if (winnerBPM == null || (mode === 'energy' ? bpm > winnerBPM : bpm < winnerBPM)) {
+            winner = p; winnerBPM = bpm;
+          }
+        }
+        return { tempo: winner.tempo, vocalType: winner.vocalType };
+      }
+      if (mode === 'average') {
+        const bpms = profiles.map(p => parseBPM(p.tempo)).filter(b => b != null);
+        const avg = bpms.length ? Math.round(bpms.reduce((a, b) => a + b, 0) / bpms.length) : null;
+        const keyPart = profiles[0].tempo.replace(/^\d+\s*BPM,?\s*/i, '');
+        const tempo = avg != null ? `${avg} BPM (avg)${keyPart ? ', ' + keyPart : ''}` : profiles[0].tempo;
+        const distinctVocals = new Set(profiles.map(p => p.vocalType));
+        const vocalType = distinctVocals.size > 1 ? 'duet' : profiles[0].vocalType;
+        return { tempo, vocalType };
+      }
+      return { tempo: profiles[0].tempo, vocalType: profiles[0].vocalType };
+    }
+
+    function getFuseSelectValues() {
+      return Array.from(document.querySelectorAll('.fuse-select')).map(s => s.value).filter(Boolean);
+    }
+
+    function clearFuseSlots() {
+      $('fuseSlots').innerHTML = '';
+    }
 
     function applyGenreSelection() {
-      const primaryVal = $('genreSelect').value; const isCustom = primaryVal === 'custom';
-      $('customSoundInput').classList.toggle('hidden', !isCustom); const fuseNames = getFuseSelectValues();
+      const primaryVal = $('genreSelect').value;
+      const isCustom = primaryVal === 'custom';
+      $('customSoundInput').classList.toggle('hidden', !isCustom);
+
+      const fuseNames = getFuseSelectValues();
+
       if (isCustom) {
-        if (!fuseNames.length) return; const fused = fuseGenreProfiles(fuseNames); if (!fused) return;
-        $('styleInput').value = [$('customSoundInput').value.trim(), fused.style].filter(Boolean).join(', ');
-        $('moodInput').value = fused.mood; $('tempoInput').value = fused.tempo; $('vocalSelect').value = fused.vocalType; $('topicInput').value = fused.topic;
+        if (!fuseNames.length) return;
+        const fused = fuseGenreProfiles(fuseNames);
+        if (!fused) return;
+        const customText = $('customSoundInput').value.trim();
+        $('styleInput').value = [customText, fused.style].filter(Boolean).join(', ');
+        $('moodInput').value = fused.mood;
+        $('tempoInput').value = fused.tempo;
+        $('vocalSelect').value = fused.vocalType;
+        $('topicInput').value = fused.topic;
         activeTags = { vocals: fused.vocals, instruments: fused.instruments, production: fused.production, rhythm: fused.rhythm };
-        tagStatus = {}; [...fused.vocals, ...fused.instruments, ...fused.production, ...fused.rhythm].forEach(t => tagStatus[t] = true);
-        renderChips(); compilePrompt(); generateLyrics(); return;
+        tagStatus = {};
+        [...fused.vocals, ...fused.instruments, ...fused.production, ...fused.rhythm].forEach(t => tagStatus[t] = true);
+        renderChips();
+        compilePrompt();
+        generateLyrics();
+        showToast(`Fused custom sound with ${fuseNames.length} style${fuseNames.length > 1 ? 's' : ''}`, '🎛️');
+        return;
       }
-      const names = [primaryVal, ...fuseNames].filter(Boolean); if (!names.length) return;
-      const profile = fuseGenreProfiles(names); if (!profile) return;
-      $('styleInput').value = profile.style; $('moodInput').value = profile.mood; $('tempoInput').value = profile.tempo; $('vocalSelect').value = profile.vocalType; $('topicInput').value = profile.topic;
+
+      const names = [primaryVal, ...fuseNames].filter(Boolean);
+      if (!names.length) return;
+
+      const profile = fuseGenreProfiles(names);
+      if (!profile) return;
+
+      $('styleInput').value = profile.style;
+      $('moodInput').value = profile.mood;
+      $('tempoInput').value = profile.tempo;
+      $('vocalSelect').value = profile.vocalType;
+      $('topicInput').value = profile.topic;
       activeTags = { vocals: profile.vocals, instruments: profile.instruments, production: profile.production, rhythm: profile.rhythm };
-      tagStatus = {}; [...profile.vocals, ...profile.instruments, ...profile.production, ...profile.rhythm].forEach(t => tagStatus[t] = true);
-      renderChips(); compilePrompt(); generateLyrics();
+      tagStatus = {};
+      [...profile.vocals, ...profile.instruments, ...profile.production, ...profile.rhythm].forEach(t => tagStatus[t] = true);
+      renderChips();
+      compilePrompt();
+      generateLyrics();
+      if (names.length > 1) showToast(`Fused ${names.length} styles into ${profile.label}`, '🎛️');
     }
 
     function createFuseSlot() {
-      if (document.querySelectorAll('.fuse-select').length >= 3) { showToast('Max 4 styles total', '⚠️'); return; }
-      const wrap = document.createElement('div'); wrap.className = 'flex items-center gap-2';
-      const sel = document.createElement('select'); sel.className = 'fuse-select touch-target flex-1 bg-studio-950 border border-studio-800 focus:border-amber-500 rounded-lg px-3 py-2.5 text-sm text-studio-100 outline-none';
-      sel.innerHTML = '<option value="">+ Select a style to fuse in…</option>' + $('genreSelect').innerHTML.replace(/<option value="">[\s\S]*?<\/option>/, '').replace(/<option value="custom">[\s\S]*?<\/option>/, '');
+      const existing = document.querySelectorAll('.fuse-select').length;
+      if (existing >= 3) { showToast('Max 4 styles total (1 primary + 3 fused)', '⚠️'); return; }
+
+      const wrap = document.createElement('div');
+      wrap.className = 'flex items-center gap-2';
+
+      const sel = document.createElement('select');
+      sel.className = 'fuse-select touch-target flex-1 bg-studio-950 border border-studio-800 focus:border-amber-500 rounded-lg px-3 py-2.5 text-sm text-studio-100 outline-none';
+      const optionsHtml = $('genreSelect').innerHTML
+        .replace(/<option value="">[\s\S]*?<\/option>/, '')
+        .replace(/<option value="custom">[\s\S]*?<\/option>/, '');
+      sel.innerHTML = '<option value="">+ Select a style to fuse in…</option>' + optionsHtml;
       sel.addEventListener('change', applyGenreSelection);
-      const rm = document.createElement('button'); rm.type = 'button'; rm.className = 'touch-target min-h-[40px] min-w-[40px] rounded-lg text-studio-400 hover:text-rose-400 hover:bg-studio-800 flex items-center justify-center'; rm.textContent = '✕';
-      rm.onclick = () => { wrap.remove(); applyGenreSelection(); }; wrap.appendChild(sel); wrap.appendChild(rm); $('fuseSlots').appendChild(wrap);
+
+      const rm = document.createElement('button');
+      rm.type = 'button';
+      rm.setAttribute('aria-label', 'Remove this fused style');
+      rm.className = 'touch-target min-h-[40px] min-w-[40px] rounded-lg text-studio-400 hover:text-rose-400 hover:bg-studio-800 transition-colors flex items-center justify-center';
+      rm.textContent = '✕';
+      rm.onclick = () => { wrap.remove(); applyGenreSelection(); };
+
+      wrap.appendChild(sel);
+      wrap.appendChild(rm);
+      $('fuseSlots').appendChild(wrap);
     }
 
     const $ = id => document.getElementById(id);
-    let currentEngine = 'suno'; let activeTags = { vocals: [], instruments: [], production: [], rhythm: [] }; let tagStatus = {}; let history = [];
+    let currentEngine = 'suno';
+    let activeTags = { vocals: [], instruments: [], production: [], rhythm: [] };
+    let tagStatus = {};
+    let history = [];
     try { history = JSON.parse(localStorage.getItem('pw_history_v2') || '[]'); } catch(e) {}
 
+    // Presets
     const PRESETS = {
       'synthwave-noir': { genre: 'Synthwave', style: 'Synthwave, Darksynth', mood: 'Driving, Cinematic', tempo: '118 BPM, F Minor', vocal: 'male', topic: 'Speeding through neon metropolis' },
       'deep-focus-ambient': { genre: 'Deep Focus Flow', style: 'Ambient Drone, 432Hz', mood: 'Focused, Tranquil', tempo: '60 BPM, C Maj', vocal: 'instrumental', engine: 'flow', topic: 'Pure flow and concentration' },
@@ -998,132 +849,276 @@
       'folk-dnb': { genre: 'Folk', style: 'Indie Folk, Liquid Drum & Bass', mood: 'Earthy, Soaring, Restless', tempo: '174 BPM, G Major', vocal: 'male', topic: 'Leaving home with one suitcase and a promise' }
     };
 
+    // Toast UI
     let toastTimer = null;
     function showToast(msg, icon = '✨') {
-      const toast = $('toast'); $('toastIcon').textContent = icon; $('toastMessage').textContent = msg;
-      toast.classList.remove('opacity-0', 'translate-y-4', 'pointer-events-none'); toast.classList.add('opacity-100', 'translate-y-0');
-      clearTimeout(toastTimer); toastTimer = setTimeout(() => { toast.classList.remove('opacity-100', 'translate-y-0'); toast.classList.add('opacity-0', 'translate-y-4', 'pointer-events-none'); }, 2500);
+      const toast = $('toast');
+      $('toastIcon').textContent = icon;
+      $('toastMessage').textContent = msg;
+      toast.classList.remove('opacity-0', 'translate-y-4', 'pointer-events-none');
+      toast.classList.add('opacity-100', 'translate-y-0');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.remove('opacity-100', 'translate-y-0');
+        toast.classList.add('opacity-0', 'translate-y-4', 'pointer-events-none');
+      }, 2500);
     }
 
     function copyText(text, successMsg) {
       if (!text) return;
-      if (navigator.clipboard) { navigator.clipboard.writeText(text).then(() => showToast(successMsg, '📋')).catch(() => fallbackCopy(text, successMsg)); } else { fallbackCopy(text, successMsg); }
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(() => showToast(successMsg, '📋')).catch(() => fallbackCopy(text, successMsg));
+      } else {
+        fallbackCopy(text, successMsg);
+      }
     }
+    
     function fallbackCopy(text, successMsg) {
-      const ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.left = '-9999px'; document.body.appendChild(ta); ta.select();
-      try { document.execCommand('copy'); showToast(successMsg, '📋'); } catch(e) { showToast('Copy failed', '❌'); } document.body.removeChild(ta);
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); showToast(successMsg, '📋'); } 
+      catch(e) { showToast('Copy failed', '❌'); }
+      document.body.removeChild(ta);
     }
 
     function renderChips() {
       const renderCat = (containerId, list) => {
-        const container = $(containerId); container.textContent = '';
-        if (!list || !list.length) { container.innerHTML = `<span class="text-sm text-studio-500 italic">None</span>`; return; }
+        const container = $(containerId);
+        container.textContent = '';
+        if (!list || !list.length) {
+          container.innerHTML = `<span class="text-sm text-studio-500 italic">None</span>`;
+          return;
+        }
         list.forEach(tag => {
           const isActive = tagStatus[tag] !== false;
-          const btn = document.createElement('button'); btn.type = 'button'; btn.className = `touch-target min-h-[36px] px-3 py-1.5 rounded-lg text-sm font-mono border transition-all ${isActive ? 'tag-on' : 'tag-off'}`; btn.textContent = tag;
-          btn.onclick = () => { tagStatus[tag] = !isActive; renderChips(); compilePrompt(); }; container.appendChild(btn);
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = `touch-target min-h-[36px] px-3 py-1.5 rounded-lg text-sm font-mono border transition-all ${isActive ? 'tag-on' : 'tag-off'}`;
+          btn.textContent = tag;
+          btn.setAttribute('aria-pressed', isActive.toString());
+          btn.setAttribute('aria-label', `Toggle tag ${tag}`);
+          btn.onclick = () => {
+            tagStatus[tag] = !isActive;
+            renderChips();
+            compilePrompt();
+          };
+          container.appendChild(btn);
         });
       };
-      renderCat('vocalChips', activeTags.vocals); renderCat('instChips', activeTags.instruments); renderCat('prodChips', activeTags.production); renderCat('rhythmChips', activeTags.rhythm);
-      $('activeTraitCount').textContent = `${Object.keys(tagStatus).filter(k => tagStatus[k]).length} active`;
+      renderCat('vocalChips', activeTags.vocals);
+      renderCat('instChips', activeTags.instruments);
+      renderCat('prodChips', activeTags.production);
+      renderCat('rhythmChips', activeTags.rhythm);
+      
+      const activeCount = Object.keys(tagStatus).filter(k => tagStatus[k]).length;
+      $('activeTraitCount').textContent = `${activeCount} active`;
     }
 
-    let morphMarkers = [ { time: '0:00', style: '', duration: 15 }, { time: '1:00', style: '', duration: 15 } ];
+    let morphMarkers = [
+      { time: '0:00', style: '', duration: 15 },
+      { time: '1:00', style: '', duration: 15 }
+    ];
 
     function renderMorphMarkers() {
-      const host = $('morphMarkers'); host.textContent = '';
+      const host = $('morphMarkers');
+      host.textContent = '';
       morphMarkers.forEach((m, i) => {
-        const row = document.createElement('div'); row.className = 'grid grid-cols-[72px_1fr_72px_40px] gap-2 items-center';
-        const time = document.createElement('input'); time.value = m.time; time.placeholder = '0:00'; time.className = 'touch-target bg-studio-950 border border-studio-800 rounded px-2 py-2 text-sm font-mono text-studio-200';
+        const row = document.createElement('div');
+        row.className = 'grid grid-cols-[72px_1fr_72px_40px] gap-2 items-center';
+        const time = document.createElement('input');
+        time.value = m.time; time.placeholder = '0:00';
+        time.className = 'touch-target bg-studio-950 border border-studio-800 rounded px-2 py-2 text-sm font-mono text-studio-200';
+        time.title = 'Timeline position (m:ss)';
         time.oninput = e => { m.time = e.target.value; compilePrompt(); generateLyrics(); };
-        const sel = document.createElement('select'); sel.className = 'morph-style touch-target bg-studio-950 border border-studio-800 rounded px-2 py-2 text-sm text-studio-200';
+        const sel = document.createElement('select');
+        sel.className = 'morph-style touch-target bg-studio-950 border border-studio-800 rounded px-2 py-2 text-sm text-studio-200';
         sel.innerHTML = '<option value="">Select style…</option>' + $('genreSelect').innerHTML.replace(/<option value="">[\s\S]*?<\/option>/, '').replace(/<option value="custom">[\s\S]*?<\/option>/, '');
-        sel.value = m.style; sel.onchange = e => { m.style = e.target.value; compilePrompt(); generateLyrics(); };
-        const dur = document.createElement('select'); dur.className = 'touch-target bg-studio-950 border border-studio-800 rounded px-2 py-2 text-sm text-studio-200';
-        [8,15,30,45,60].forEach(v => dur.add(new Option(v + 's', v))); dur.value = String(m.duration || 15); dur.onchange = e => { m.duration = Number(e.target.value); compilePrompt(); generateLyrics(); };
-        const rm = document.createElement('button'); rm.type='button'; rm.className='touch-target min-h-[40px] rounded-lg text-studio-400 hover:text-rose-400'; rm.textContent='✕'; rm.disabled = morphMarkers.length <= 1;
+        sel.value = m.style;
+        sel.onchange = e => { m.style = e.target.value; compilePrompt(); generateLyrics(); };
+        const dur = document.createElement('select');
+        dur.className = 'touch-target bg-studio-950 border border-studio-800 rounded px-2 py-2 text-sm text-studio-200';
+        [8,15,30,45,60].forEach(v => dur.add(new Option(v + 's', v)));
+        dur.value = String(m.duration || 15);
+        dur.onchange = e => { m.duration = Number(e.target.value); compilePrompt(); generateLyrics(); };
+        const rm = document.createElement('button');
+        rm.type='button'; rm.className='touch-target min-h-[40px] rounded-lg text-studio-400 hover:text-rose-400';
+        rm.textContent='✕'; rm.disabled = morphMarkers.length <= 1;
         rm.onclick=()=>{ morphMarkers.splice(i,1); renderMorphMarkers(); compilePrompt(); generateLyrics(); };
         row.append(time,sel,dur,rm); host.appendChild(row);
       });
     }
 
-    function parseMorphTime(value) { const m = String(value || '').trim().match(/^(\d+):([0-5]\d)$/); return m ? Number(m[1]) * 60 + Number(m[2]) : NaN; }
-    function formatMorphTime(seconds) { const s = Math.max(0, Math.round(seconds)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; }
-    function getMorphData() { return morphMarkers.filter(m => m.time && m.style && Number.isFinite(parseMorphTime(m.time))).map(m => ({ ...m, seconds: parseMorphTime(m.time), duration: Number(m.duration || $('morphDuration').value || 15) })).sort((a,b) => a.seconds - b.seconds); }
-    function getTuningHz() { const v = $('flowTuning').value; if (v === '432hz') return 432; if (v === '528hz') return 528; return 440; }
-    function getTuningLabel() { const hz = getTuningHz(); if (hz === 432) return '432 Hz warm tuning'; if (hz === 528) return '528 Hz solfeggio tuning'; return '440 Hz standard tuning'; }
-    function getTempoCurveDescriptor() { const map = { adaptive: 'tempo drifts naturally to match the incoming section', linear: 'tempo ramps at a steady constant-rate glide', 'bar-aligned': 'tempo change locks to the nearest bar/downbeat' }; return map[$('morphTempoCurve').value] || map.adaptive; }
-    function getStemMorphDescriptor() { return $('morphStems').value === 'disabled' ? 'the full mix switches together at the transition point' : 'individual layers fade across independently'; }
-    function getStyleCueDetails(style, lyricLayer = false) { const p = getGenreProfile(style); if (!p) return { style, tempo: '', instruments: [] }; return { style, tempo: p.tempo || '', instruments: ((lyricLayer && p.layerInstruments) ? p.layerInstruments : p.instruments).slice(0, 2) }; }
+    function parseMorphTime(value) {
+      const m = String(value || '').trim().match(/^(\d+):([0-5]\d)$/);
+      return m ? Number(m[1]) * 60 + Number(m[2]) : NaN;
+    }
+
+    function formatMorphTime(seconds) {
+      const s = Math.max(0, Math.round(seconds));
+      return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+    }
+
+    function getMorphData() {
+      return morphMarkers
+        .filter(m => m.time && m.style && Number.isFinite(parseMorphTime(m.time)))
+        .map(m => ({ ...m, seconds: parseMorphTime(m.time), duration: Number(m.duration || $('morphDuration').value || 15) }))
+        .sort((a,b) => a.seconds - b.seconds);
+    }
+
+    function getTuningHz() {
+      const v = $('flowTuning').value;
+      if (v === '432hz') return 432;
+      if (v === '528hz') return 528;
+      return 440;
+    }
+
+    function getTuningLabel() {
+      const hz = getTuningHz();
+      if (hz === 432) return '432 Hz warm tuning';
+      if (hz === 528) return '528 Hz solfeggio tuning';
+      return '440 Hz standard tuning';
+    }
+
+    function getTempoCurveDescriptor() {
+      const map = {
+        adaptive: 'tempo drifts naturally to match the incoming section\'s energy',
+        linear: 'tempo ramps at a steady, constant-rate glide',
+        'bar-aligned': 'tempo change locks to the nearest bar/downbeat'
+      };
+      return map[$('morphTempoCurve').value] || map.adaptive;
+    }
+
+    function getStemMorphDescriptor() {
+      return $('morphStems').value === 'disabled'
+        ? 'the full mix switches together at the transition point'
+        : 'individual layers (drums, bass, harmonic elements) fade across independently rather than switching all at once';
+    }
+
+    function getStyleCueDetails(style, lyricStudioLayer = false) {
+      const profile = getGenreProfile(style);
+      if (!profile) return { style, tempo: '', instruments: [] };
+      const layerSource = lyricStudioLayer && profile.layerInstruments
+        ? profile.layerInstruments
+        : profile.instruments;
+      return {
+        style,
+        tempo: profile.tempo || '',
+        instruments: (layerSource || []).slice(0, 2)
+      };
+    }
 
     function buildStructuralCueBlock() {
-      const markers = getMorphData(); if (!markers.length) return '';
-      return markers.map((m, i) => {
+      const markers = getMorphData();
+      if (!markers.length) return '';
+      const tempoDesc = getTempoCurveDescriptor();
+      const stemDesc = getStemMorphDescriptor();
+      const lines = markers.map((m, i) => {
         const d = getStyleCueDetails(m.style);
-        const transition = i < markers.length - 1 ? `\n[TRANSITION: ${getTempoCurveDescriptor()}; preserve melody]` : '';
-        return `[SECTION ${i + 1}: ${d.style.toUpperCase()}]${d.tempo ? `\n[TEMPO: ${d.tempo}]` : ''}${d.instruments.length ? `\n[LAYER: ${d.instruments.join(', ')}]` : ''}${transition}`;
-      }).join('\n\n');
+        const tempoCue = d.tempo ? `\n[TEMPO: ${d.tempo}]` : '';
+        const instrumentCue = d.instruments.length ? `\n[LAYER: ${d.instruments.join(', ')}]` : '';
+        const transition = i < markers.length - 1 ? `\n[TRANSITION: ${tempoDesc}; ${stemDesc}; preserve the main melody and vocal identity]` : '';
+        return `[SECTION ${i + 1}: ${d.style.toUpperCase()}]${tempoCue}${instrumentCue}${transition}`;
+      });
+      return lines.join('\n\n');
     }
 
     function buildChainPromptBlock() {
-      const markers = getMorphData(); if (!markers.length) return '';
+      const markers = getMorphData();
+      if (!markers.length) return '';
       return markers.map((m, i) => {
-        const d = getStyleCueDetails(m.style); const next = markers[i + 1]; const tags = [d.style, d.tempo, ...d.instruments].filter(Boolean).join(', ');
-        if (i === 0) return `STEP 1 — GENERATE\nSection: ${formatMorphTime(m.seconds)}–${next ? formatMorphTime(next.seconds) : 'end'}\nStyle prompt: ${tags}`;
-        return `STEP ${i + 1} — CONTINUE / EXTEND\nExtension point: around ${formatMorphTime(Math.max(m.seconds - m.duration, 0))}\nNew section style prompt: ${tags}`;
+        const d = getStyleCueDetails(m.style);
+        const next = markers[i + 1];
+        const tags = [d.style, d.tempo, ...d.instruments].filter(Boolean).join(', ');
+        if (i === 0) {
+          return `STEP 1 — GENERATE\nSection: ${formatMorphTime(m.seconds)}–${next ? formatMorphTime(next.seconds) : 'end'}\nStyle prompt: ${tags}\nPreserve a clear melodic motif and vocal identity for continuation.`;
+        }
+        const extensionAt = formatMorphTime(Math.max(m.seconds - m.duration, 0));
+        return `STEP ${i + 1} — CONTINUE / EXTEND\nExtension point: around ${extensionAt}\nNew section style prompt: ${tags}\nCarry forward the existing melody, vocal identity and harmonic context; introduce the new instrumentation progressively.`;
       }).join('\n\n--- NEXT EXTENSION ---\n\n');
     }
 
     function buildTransitionPrompt() {
-      const markers = getMorphData(); if (markers.length < 2) return '';
+      const markers = getMorphData();
+      if (markers.length < 2) return '';
+
       const transitions = [];
       for (let i = 0; i < markers.length - 1; i++) {
-        const a = getStyleCueDetails(markers[i].style); const b = getStyleCueDetails(markers[i + 1].style);
-        transitions.push(`${a.style} → ${b.style} over ${Math.max(1, markers[i + 1].seconds - markers[i].seconds)}s`);
+        const a = getStyleCueDetails(markers[i].style);
+        const b = getStyleCueDetails(markers[i + 1].style);
+        const duration = Math.max(1, markers[i + 1].seconds - markers[i].seconds);
+        transitions.push(`${a.style} → ${b.style} over ${duration}s, gradual morph`);
       }
-      return `Progression: ${transitions.join('; ')}. Preserve melody while groove and texture evolve. End in ${getStyleCueDetails(markers[markers.length - 1].style).style}.`;
+      const last = getStyleCueDetails(markers[markers.length - 1].style);
+      return `Progression: ${transitions.join('; ')}. Preserve melody, vocals and harmony while groove, instrumentation and texture evolve continuously; no abrupt genre switch; ${getTempoCurveDescriptor()}; ${getStemMorphDescriptor()}. End in ${last.style}.`;
     }
 
     function updateMorphOutputs() {
-      const method = $('morphMethod').value; const data = getMorphData();
+      const method = $('morphMethod').value;
+      const data = getMorphData();
+      const structural = method === 'structural' ? buildStructuralCueBlock() : '';
+      const chain = method === 'chain' ? buildChainPromptBlock() : '';
       const transition = buildTransitionPrompt();
-      $('chainPanel').classList.toggle('hidden', method !== 'chain'); $('chainOutput').value = method === 'chain' ? buildChainPromptBlock() : '';
-      return { transition };
+      $('chainPanel').classList.toggle('hidden', method !== 'chain');
+      $('chainOutput').value = chain;
+      return { data, structural, chain, transition };
     }
 
     function compilePrompt() {
       const genre = $('genreSelect').value === 'custom' ? $('customSoundInput').value.trim() : $('genreSelect').value.trim();
-      const style = $('styleInput').value.trim(); const mood = $('moodInput').value.trim(); const tempo = $('tempoInput').value.trim();
-      const vocalPref = $('vocalSelect').value; const maxChars = parseInt($('charLimit').value, 10) || 0; const budget = parseInt($('tagBudget').value, 10) || 6;
+      const style = $('styleInput').value.trim();
+      const mood = $('moodInput').value.trim();
+      const tempo = $('tempoInput').value.trim();
+      const vocalPref = $('vocalSelect').value;
+      const maxChars = parseInt($('charLimit').value, 10) || 0;
+      const budget = parseInt($('tagBudget').value, 10) || 6;
       
       const getActive = list => (list || []).filter(t => tagStatus[t] !== false);
       const cats = [getActive(activeTags.instruments), getActive(activeTags.vocals), getActive(activeTags.production), getActive(activeTags.rhythm)].map(c => c.slice());
-      const chosenTags = []; let rem = budget; let idx = 0;
+      const chosenTags = [];
+      let rem = budget;
+      let idx = 0;
       while (rem > 0 && cats.some(c => c.length)) {
-        const cat = cats[idx % cats.length]; idx++; const tag = cat.shift();
-        if (tag && !chosenTags.includes(tag)) { chosenTags.push(tag); rem--; }
+        const cat = cats[idx % cats.length];
+        idx++;
+        const tag = cat.shift();
+        if (!tag) continue;
+        if (!chosenTags.includes(tag)) { chosenTags.push(tag); rem--; }
       }
       
       let promptStr = '';
       if (currentEngine === 'suno') {
         $('enginePromptTitle').textContent = 'Suno Style Prompt (v3.5 / v4 / v5.5)';
         const parts = [style, genre && !style.toLowerCase().includes(genre.toLowerCase()) ? genre : '', mood ? mood + ' vibe' : '', tempo];
-        if (vocalPref === 'instrumental') parts.push('instrumental'); else if (vocalPref === 'vocoder') parts.push('vocoder vocals'); else if (vocalPref !== 'auto') parts.push(`${vocalPref} vocals`);
+        if (vocalPref === 'instrumental') parts.push('instrumental');
+        else if (vocalPref === 'vocoder') parts.push('vocoder vocals');
+        else if (vocalPref !== 'auto') parts.push(`${vocalPref} vocals`);
         parts.push(...chosenTags);
         promptStr = parts.filter(Boolean).join(' | ');
       } else if (currentEngine === 'udio') {
         $('enginePromptTitle').textContent = 'Udio Prompt (v1.5)';
-        promptStr = [style, vocalPref === 'instrumental' ? 'instrumental, no vocals' : (vocalPref !== 'auto' ? `${vocalPref} vocalist` : ''), mood, tempo, ...chosenTags].filter(Boolean).join(', ');
+        const parts = [style, vocalPref === 'instrumental' ? 'instrumental, no vocals' : (vocalPref !== 'auto' ? `${vocalPref} vocalist` : ''), mood, tempo, ...chosenTags];
+        promptStr = parts.filter(Boolean).join(', ');
       } else if (currentEngine === 'musicgen') {
         $('enginePromptTitle').textContent = 'MusicGen / AudioCraft';
-        const details = []; if (chosenTags.length) details.push(`featuring ${chosenTags.slice(0, 4).join(', ')}`); if (tempo) details.push(`at ${tempo}`);
-        if (vocalPref === 'instrumental') details.push('pure instrumental'); else if (vocalPref !== 'auto') details.push(`with ${vocalPref} vocals`);
-        promptStr = `A ${mood ? mood.toLowerCase() + ' ' : ''}${style || genre || 'music track'} ` + details.join(', ') + '. Clean dynamic master.';
+        let intro = `A ${mood ? mood.toLowerCase() + ' ' : ''}${style || genre || 'music track'}`;
+        const details = [];
+        if (chosenTags.length) details.push(`featuring ${chosenTags.slice(0, 4).join(', ')}`);
+        if (tempo) details.push(`at ${tempo}`);
+        if (vocalPref === 'instrumental') details.push('pure instrumental');
+        else if (vocalPref !== 'auto') details.push(`with ${vocalPref} vocals`);
+        promptStr = intro + ' ' + details.join(', ') + '. Clean dynamic master.';
       } else if (currentEngine === 'step') {
+        // StepAudio 3 Music: 6-Part Architectural Framework to prevent style confusion
         $('enginePromptTitle').textContent = 'StepAudio 3 (6-Part Framework)';
-        const p_genre = style || genre || 'Modern Track'; const p_mood = mood || 'Neutral vibe';
+        const p_genre = style || genre || 'Modern Track';
+        const p_mood = mood || 'Neutral vibe';
         const p_inst = getActive(activeTags.instruments).join(', ') || 'Standard Instrumentation';
-        const p_tempo = tempo || '120 BPM'; const p_vocal = vocalPref === 'instrumental' ? 'Instrumental' : (vocalPref !== 'auto' ? `${vocalPref} vocals` : 'Lead vocals');
+        const p_tempo = tempo || '120 BPM';
+        const p_vocal = vocalPref === 'instrumental' ? 'Instrumental' : (vocalPref !== 'auto' ? `${vocalPref} vocals` : 'Lead vocals');
         const p_prod = getActive(activeTags.production).join(', ') || 'Clean mix';
         promptStr = `[${p_genre}] [${p_mood}] [${p_inst}] [${p_tempo}] [${p_vocal}] [${p_prod}]`;
         const extra = [...getActive(activeTags.vocals), ...getActive(activeTags.rhythm)];
@@ -1140,7 +1135,9 @@
       }
       
       const morphState = updateMorphOutputs();
-      if (morphState.transition) promptStr = [promptStr, morphState.transition].filter(Boolean).join(' | ');
+      if (morphState.transition) {
+        promptStr = [promptStr, morphState.transition].filter(Boolean).join(' | ');
+      }
 
       if (maxChars > 0 && promptStr.length > maxChars) {
         let truncated = promptStr.slice(0, maxChars);
@@ -1149,99 +1146,216 @@
         promptStr = truncated.replace(/[,|]\s*$/, '').trim();
       }
       
-      $('promptOutput').value = promptStr; $('charCounter').textContent = `${promptStr.length} chars`;
+      $('promptOutput').value = promptStr;
+      $('charCounter').textContent = `${promptStr.length} chars`;
+      
       const neg = ['distorted vocals', 'muddy bass', 'harsh clipping'];
       if (vocalPref === 'instrumental') neg.unshift('vocals', 'singing');
       $('negOutput').value = neg.join(', ');
     }
 
-    // Dynamic Lyrics Generator matching user topic consistently across stanzas
+    // LYRICS ENGINE (Randomization & Dynamic Story Context Shaping)
     function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
     const sec = (tag, lines) => `[${tag}]\n${lines}`;
 
+    // Clean topic into poetic subject
+    function formatTopic(raw) {
+      if (!raw || !raw.trim()) return 'the midnight road';
+      return raw.trim().replace(/[.]+$/, '');
+    }
+
     const LYRIC_BUILDERS = {
       'pop-standard': (t) => {
-        return sec('Verse 1', pick([`Headlights cutting through the velvet haze\nHolding on to every second of these bittersweet days\nThinking about ${t}`, `Static on the radio, static in my mind\nStill I keep circling back to ${t}\nLeaving every doubt I had behind`])) + '\n\n' +
-               sec('Pre-Chorus', pick([`And I feel the temperature starting to climb\nGive me one more breath before we cross the line`, `Every second stretches slower than before\nStanding at the edge, I'm begging for more`])) + '\n\n' +
-               sec('Chorus', pick([`We're dancing on the edge of the wire\nTurning all our heartaches into gasoline and fire\nOh we are golden, fearless and free`, `We're chasing ${t} through the dark\nLetting every ember turn into a spark\nOh we are golden, fearless and free`])) + '\n\n' +
-               sec('Verse 2', pick([`City skyline blurring into ribbons of blue\nEvery road I'm taking brings me closer to you`, `Windows down, the world rushing past in a blur\nEvery mile brings ${t} closer than before`])) + '\n\n' +
-               sec('Bridge', pick([`If we stumble, if we fall\nAt least we dared to give it all`, `Every scar becomes a song\nProof that we kept moving on`])) + '\n\n' +
-               sec('Chorus', pick([`We're dancing on the edge of the wire\nTurning all our heartaches into gasoline and fire\nOh we are golden, fearless and free`, `We're chasing ${t} through the dark\nLetting every ember turn into a spark\nOh we are golden, fearless and free`])) + '\n\n' +
-               sec('Outro: Fade Out', pick([`Just keep the lights on\nWe're dancing till the break of day`, `Hold onto ${t}\nWe'll find our way back home someday`]));
+        const verse1 = pick([
+          `Headlights cutting through the velvet haze\nHolding on to every second of these bittersweet days\nCan't shake the memory of ${t}`,
+          `Neon signs are blinking out a warning sign\nEvery single heartbeat pulling back to ${t}\nCan't shake the feeling, running out of time`,
+          `Static on the radio, static in my mind\nStill I keep on circling back to ${t}\nLeaving every doubt I had behind`
+        ]);
+        const pre = pick([
+          `And I feel the temperature starting to climb\nGive me one more breath before we cross the line`,
+          `Every second stretches slower than before\nStanding at the edge, I'm begging for more`,
+          `Something in the air is pulling us in tight\nHold on, hold on, we're diving into the light`
+        ]);
+        const chorus = pick([
+          `We're dancing on the edge of the wire\nTurning all our heartaches into gasoline and fire\nOh we are golden, fearless and free`,
+          `We're chasing ${t} through the dark\nLetting every ember turn into a spark\nOh we are golden, fearless and free`,
+          `We're burning brighter than the city lights\nTurning every ending into new sunrise\nOh we are golden, fearless and free`
+        ]);
+        const verse2 = pick([
+          `City skyline blurring into ribbons of blue\nEvery road I'm taking brings me closer to you`,
+          `Windows down, the world rushing past in a blur\nEvery mile brings ${t} closer than before`,
+          `Echoes of a memory I can't quite erase\nStill I'm finding pieces of ${t} in this place`
+        ]);
+        const bridge = pick([
+          `If we stumble, if we fall\nAt least we dared to give it all`,
+          `Maybe we were meant to break\nJust to find out what it takes`,
+          `Every scar becomes a song\nProof that we kept moving on`
+        ]);
+        const outro = pick([
+          `Just keep the lights on\nWe're dancing till the break of day`,
+          `Let the echo carry on\nLong after the music fades away`,
+          `Hold onto ${t}\nWe'll find our way back home someday`
+        ]);
+        return sec('Verse 1', verse1) + '\n\n' + sec('Pre-Chorus', pre) + '\n\n' + sec('Chorus', chorus) + '\n\n' +
+               sec('Verse 2', verse2) + '\n\n' + sec('Bridge', bridge) + '\n\n' + sec('Chorus', chorus) + '\n\n' +
+               sec('Outro: Fade Out', outro);
       },
-      'club-anthem': (t) => sec('Intro', pick(['Signals in the wire, waiting for the spark', 'Lights go dark before the room explodes'])) + '\n\n' +
-                           sec('Buildup', pick(['Pressure rising underneath the neon light\nThree, two, one - ignite!', 'Feel it building underneath your skin\nThis is where it begins!'])) + '\n\n' +
-                           sec('Drop', '') + '\n\n' + sec('Verse', pick([`Lost inside the rhythm of ${t}`, `Nothing matters now but ${t} and this beat`])) + '\n\n' +
-                           sec('Buildup', pick(['Can you feel the riser climbing to the sky?', 'Hold your breath, the floor is on fire'])) + '\n\n' + sec('Drop', '') + '\n\n' + sec('Outro: Fade Out', ''),
-      'rap-bars': (t) => sec('Intro', pick([`Yeah. Lights low, frequencies aligned.`, `Real talk, no filter, no fabrication.`])) + '\n\n' +
-                        sec('Verse 1', pick([`Started with a quiet whisper in the back of the room\nTraded every hour just to watch the vision bloom`, `Started from the bottom, everybody said I'd fold\nTraded every excuse for a story to be told`])) + '\n\n' +
-                        sec('Hook', pick(['Crown heavy, but the shoulders stay strong\nCarrying the heartbeat of the city along', `Steady climbing, never looking at the drop\nProving to myself I'll never stop`])) + '\n\n' +
-                        sec('Verse 2', pick([`Back in the pocket, measure every bar clean\nRazor-sharp focus moving through the widescreen`, `Pen to paper, turning ${t} into art\nEvery line I write becomes a brand new start`])) + '\n\n' +
-                        sec('Hook', pick(['Crown heavy, but the shoulders stay strong\nCarrying the heartbeat of the city along', `Steady climbing, never looking at the drop\nProving to myself I'll never stop`])),
-      'cinematic-epic': (t) => sec('Atmospheric Swell', pick([`Before the first light crossed the silent sea\nA distant promise found its way to me`, `Beneath the ashes of a fallen sun\nThe story of ${t} has just begun`])) + '\n\n' +
-                              sec('Crescendo', pick(['The clouds divide, the skies ignite\nWe rise above the shadow of the night', `Thunder answers every step we take\nNo wall unbroken, no vow we'll break`])) + '\n\n' +
-                              sec('Climax', pick([`Hold the horizon! Stand where the brave have bled!\nEven when the stars fall into the deep\nThis is the oath that we swore to keep!`, `Rise, and remember why we came this far!\nEven when the sky forgets each star\nWe carry ${t} like an open scar!`])) + '\n\n' + sec('Resolution', ''),
-      'flow-hypnotic': (t) => sec('Intro', pick(['Breathe into stillness\nLock into the signal\nLeave the static behind', 'Quiet the noise around you\nFind the steady current\nDrift into the center'])) + '\n\n' +
-                             sec('Flow Cadence', pick([`Following the rhythm, quiet with the motion\nLet every wandering thought dissolve in the ocean`, `Nothing to force, nothing left to prove\nJust breath and rhythm finding their own groove`])) + '\n\n' +
-                             sec('Center', pick(['Zero hesitation, laser beam focus locked', 'Clear mind, open field, endless focus'])) + '\n\n' + sec('Seamless Loop', ''),
+      'club-anthem': (t) => {
+        const intro = pick(['Signals in the wire, waiting for the spark', 'Counting down the seconds till the bassline hits', 'Lights go dark before the room explodes']);
+        const buildup1 = pick(['Pressure rising underneath the neon light\nThree, two, one - ignite!', 'Every pulse is climbing toward the edge\nHands up, here we go!', 'Feel it building underneath your skin\nThis is where it begins!']);
+        const verse = pick([`Lost inside the rhythm of ${t}`, `Chasing ${t} through the strobe and haze`, `Nothing matters now but ${t} and this beat`]);
+        const buildup2 = pick(['Can you feel the riser climbing to the sky?', 'One more drop before we say goodbye', 'Hold your breath, the floor is on fire']);
+        return sec('Intro', intro) + '\n\n' + sec('Buildup', buildup1) + '\n\n[Drop]\n\n' + sec('Verse', verse) + '\n\n' + sec('Buildup', buildup2) + '\n\n[Drop]\n\n[Outro: Fade Out]';
+      },
+      'rap-bars': (t) => {
+        const intro = pick([`Yeah. Lights low, frequencies aligned.\nLet's talk about ${t}.`, `Yeah, yeah. Pull up, no hesitation.\nThis one's about ${t}.`, `Real talk, no filter, no fabrication.\n${t} on my mind, no vacation.`]);
+        const verse1 = pick([
+          `Started with a quiet whisper in the back of the room\nTraded every hour just to watch the vision bloom\nConcrete jungle, shadows longer than the towers\nTurning silent midnight into architectural powers`,
+          `Started from the bottom, everybody said I'd fold\nTraded every excuse for a story to be told\nConcrete jungle taught me colder than the winter\nNow I'm carving out a legacy, permanent imprint`
+        ]);
+        const hook = pick(['Crown heavy, but the shoulders stay strong\nCarrying the heartbeat of the city along', 'Never blinking, never folding under weight\nEvery obstacle just fuels the debate', `Steady climbing, never looking at the drop\nProving to myself I'll never stop`]);
+        const verse2 = pick([
+          `Back in the pocket, measure every bar clean\nRazor-sharp focus moving through the widescreen`,
+          `Every bar's a receipt for the nights I couldn't sleep\nStacking up the wins while my rivals count the sheep`,
+          `Pen to paper, turning ${t} into art\nEvery line I write becomes a brand new start`
+        ]);
+        return sec('Intro', intro) + '\n\n' + sec('Verse 1', verse1) + '\n\n' + sec('Hook', hook) + '\n\n' + sec('Verse 2', verse2) + '\n\n' + sec('Hook', hook) + '\n\n[Outro: Fade Out]';
+      },
+      'cinematic-epic': (t) => {
+        const swell = pick([`Before the first light crossed the silent sea\nA distant promise found its way to me`, `Beneath the ashes of a fallen sun\nThe story of ${t} has just begun`, `Out where the mountains meet the failing sky\nA final banner rises, held up high`]);
+        const crescendo = pick(['The clouds divide, the skies ignite\nWe rise above the shadow of the night', `Thunder answers every step we take\nNo wall unbroken, no vow we'll break`, `Every ember carries ${t} home\nAcross the fields where legends roam`]);
+        const climax = pick([
+          `Hold the horizon! Stand where the brave have bled!\nEven when the stars fall into the deep\nThis is the oath that we swore to keep!`,
+          `Rise, and remember why we came this far!\nEven when the sky forgets each star\nWe carry ${t} like an open scar!`,
+          `Stand and be counted where the legends stood!\nEven if the ending's understood\nWe gave everything, and it was good!`
+        ]);
+        return sec('Atmospheric Swell', swell) + '\n\n' + sec('Crescendo', crescendo) + '\n\n' + sec('Climax', climax) + '\n\n[Resolution]';
+      },
+      'flow-hypnotic': (t) => {
+        const intro = pick(['Breathe into stillness\nLock into the signal\nLeave the static behind', `Settle into silence\nLet go of ${t}\nThere is only now`, 'Quiet the noise around you\nFind the steady current\nDrift into the center']);
+        const cadence = pick([
+          `Following the rhythm, quiet with the motion\nLet every wandering thought dissolve in the ocean\nStep after step, moving with the stream`,
+          `Following the pulse of ${t}, steady and slow\nLet every distraction simply come and go\nStep after step, moving with the flow`,
+          `Nothing to force, nothing left to prove\nJust breath and rhythm finding their own groove`
+        ]);
+        const center = pick(['Zero hesitation, laser beam focus locked', `Fully present, fully here with ${t}`, 'Clear mind, open field, endless focus']);
+        return sec('Intro', intro) + '\n\n' + sec('Flow Cadence', cadence) + '\n\n' + sec('Center', center) + '\n\n[Seamless Loop]';
+      },
       'verse-pre-chorus': (t) => {
-        return sec('Verse 1', pick([`I can still remember ${t}\nThe little details nobody else could see`, `Looking back at the shape of ${t}\nWondering how we got this far`])) + '\n\n' +
-               sec('Pre-Chorus', pick([`Now the distance disappears\nI hear the words we never said`, `One more breath and everything changes\nThe silence is breaking`])) + '\n\n' +
-               sec('Chorus', pick([`${t} became the reason I stayed\nThe spark in the dark, the choice that I made\nI won't let the moment slip away`, `We're holding onto ${t} tonight\nStanding fearless in the fading light\nI won't let the moment slip away`])) + '\n\n' +
-               sec('Verse 2', pick([`After the night of ${t}\nI learned what the silence meant`, `Walking back through the memories of ${t}\nCounting every step`])) + '\n\n' +
-               sec('Chorus', pick([`${t} became the reason I stayed\nThe spark in the dark, the choice that I made\nI won't let the moment slip away`, `We're holding onto ${t} tonight\nStanding fearless in the fading light\nI won't let the moment slip away`])) + '\n\n' +
-               sec('Outro', pick([`If the road leads back to ${t}\nI'll meet it with open eyes`, `Fading out into ${t}\nFading out`]));
+        const v1 = pick([`I can still remember ${t}\nThe little details nobody else could see\nEvery road kept pulling me toward the truth`, `Looking back at the dawn of ${t}\nTracing all the promises we kept inside\nFinding our footing on uneven ground`]);
+        const pre = pick([`Now the distance disappears\nI hear the words we never said\nOne more breath and everything changes`, `Shadows fading in the light\nNothing left to hide away\nOne more step and we are free`]);
+        const ch = pick([`${t} became the reason I stayed\nThe spark in the dark, the choice that I made\nI won't let the moment slip away`, `We found our purpose in ${t}\nHigher than the doubts that tried to hold us down\nWe'll never turn around`]);
+        const v2 = pick([`After the night of ${t}\nI learned what the silence meant\nSome things break before they bend`, `Morning arrives with quiet grace\nWalking slowly through this open space\nFinding peace where the storm once raged`]);
+        return sec('Verse 1', v1) + '\n\n' + sec('Pre-Chorus', pre) + '\n\n' + sec('Chorus', ch) + '\n\n' + sec('Verse 2', v2) + '\n\n' + sec('Chorus', ch) + '\n\n' + sec('Outro', `If the road leads back to ${t}\nI'll meet it with open eyes`);
       },
-      'story-arc': (t) => sec('Setup', pick([`Before ${t}, I thought I knew where the road would end.`, `The city was quiet, oblivious to ${t}.`])) + '\n\n' +
-                         sec('Inciting Moment', pick([`Then ${t} changed the shape of everything.`, `And suddenly, ${t} demanded an answer.`])) + '\n\n' +
-                         sec('Turn', pick([`I lost what I thought I needed, and found what I could not name.`, `The path disappeared, leaving only a choice.`])) + '\n\n' +
-                         sec('Climax', pick([`Now ${t} is no longer a memory — it is the choice I make.`, `We break through the silence, forever changed by ${t}.`])) + '\n\n' +
-                         sec('Resolution', pick([`I carry the lesson forward, lighter than before.`, `What remains is quiet strength.`])),
-      'rap-story': (t) => sec('Verse 1 — 16 Bars', pick([`I came in with a plan, then ${t} changed the route\nEvery setback put a sharper truth inside the mouth\nNo shortcut, no disguise, just pressure and proof\nI kept the story moving when they said it was through`, `Walking through the echoes, looking at the past\nKnowing that ${t} was never gonna last\nI built a foundation on the things I had to lose\nNow I'm making moves, giving 'em the absolute truth`])) + '\n\n' +
-                         sec('Hook', pick([`${t}, that's the chapter I survived\nTurned a closed door to a reason to arrive`, `Yeah, we rising above ${t}\nNothing can stop the rhythm we love`])) + '\n\n' +
-                         sec('Verse 2 — 16 Bars', pick([`Now I measure every lesson by the nights it cost\nWhat I thought was being broken was a map I had lost\n${t} in the rear-view, but the meaning stays close\nI write it in the rhythm, then I let the beat expose it`, `Look at the horizon, the color of the dawn\nEvery little failure is the reason I go on\nWe turn ${t} into a stepping stone\nBuilding an empire on my own`])),
-      'cinematic-three-act': (t) => sec('ACT I — THE WORLD BEFORE', pick([`A quiet world held its breath around ${t}.`, `The shadow of ${t} loomed in the distance.`])) + '\n\n' +
-                                   sec('ACT II — THE FRACTURE', pick([`The choice arrives; ${t} becomes impossible to ignore.\nStrings rise, percussion gathers, the horizon opens.`, `Tension builds as ${t} reveals its true nature.\nThe drums echo the heartbeat of the fallen.`])) + '\n\n' +
-                                   sec('ACT III — THE RECKONING', pick([`At the peak, ${t} is transformed from fear into purpose.`, `The climax shatters the silence. Victory at a high cost.`])) + '\n\n' +
-                                   sec('CODA — AFTERMATH', pick([`The noise falls away. What remains is the truth learned from the journey.`, `A single solitary note. The story of ${t} ends in peace.`])),
-      'indie-diary': (t) => sec('Verse 1', pick([`I wrote down ${t} in the margin of an old receipt\nLike if I named it softly, it might finally leave me`, `Looking out the window, staring at the rain\nThinking about ${t} and trying to explain`])) + '\n\n' +
-                           sec('Chorus', pick([`I don't need a perfect ending\nI just need an honest one\n${t}, I am finally listening`, `It's just a whisper in the dark\nJust a single tiny spark\nBut ${t} is pulling me apart`])) + '\n\n' +
-                           sec('Verse 2', pick([`The smallest details keep returning\nA street, a voice, a half-lit room\nAll of them pointing back to ${t}`, `Coffee on the table, shadows on the wall\nWondering if ${t} ever mattered at all`])) + '\n\n' +
-                           sec('Outro', pick([`I close the book, but keep the page`, `Let it fade away, let it fade`])),
-      'call-response': (t) => sec('Call', pick([`What are we running from?`, `Who will stand with us?`])) + '\n' + sec('Response', pick([`${t} — and everything we never said.`, `We will face ${t} until the end.`])) + '\n\n' +
-                             sec('Call', pick([`What are we reaching for?`, `Where do we go from here?`])) + '\n' + sec('Response', pick([`A way through ${t}, a reason to stay.`, `Beyond ${t}, into the light.`])) + '\n\n' +
-                             sec('Call', pick([`Will the night remember us?`, `Is it over?`])) + '\n' + sec('Response', pick([`Only if we turn ${t} into a song.`, `Not until we conquer ${t}.`])),
-      'anthem-build': (t) => sec('Verse — restrained', pick([`It started quietly with ${t}\nOne small signal underneath the noise`, `Just a flicker in the dark\n${t} waiting for a spark`])) + '\n\n' +
-                            sec('Pre-Chorus — rising', pick([`Every heartbeat gets louder\nEvery doubt gives way`, `The pressure is building\nThe shadows are breaking`])) + '\n\n' +
-                            sec('Chorus — full', pick([`${t}, we rise together\nHigher than the fear, louder than the weather\nThis is the moment we were made to claim`, `We're breaking out, stepping into the sun\nWith ${t}, our journey has just begun`])) + '\n\n' +
-                            sec('Final Chorus — bigger', pick([`${t}, let the whole world hear it\nNo looking back, no reason to fear it`, `Screaming out to the sky\nWith ${t}, we'll never die`])),
-      'chorus-first': (t) => sec('Chorus', pick([`${t} hits me first, no warning, no delay\nEvery heartbeat says I'm never walking away`, `This is the sound of ${t}\nEchoing loud, impossible to ignore`])) + '\n\n' +
-                            sec('Verse 1', pick([`Started as a whisper, ended as a scream\nEverything about ${t} became the only theme`, `Looking at the pieces scattered on the floor\nKnowing that ${t} is knocking at the door`])) + '\n\n' +
-                            sec('Chorus', pick([`${t} hits me first, no warning, no delay\nEvery heartbeat says I'm never walking away`, `This is the sound of ${t}\nEchoing loud, impossible to ignore`])) + '\n\n' +
-                            sec('Bridge', pick([`Maybe it was never about the ending\nJust about the moment we stopped pretending`, `Take a breath and count to ten\nHere we go around again`])) + '\n\n' +
-                            sec('Final Chorus', pick([`${t} hits me first, no warning, no delay\nLouder now, unshaken, here to stay`, `This is the sound of ${t}\nEchoing loud, forevermore`])),
-      'aaba-jazz': (t) => sec('A — Statement', pick([`Late at night I think of ${t}, soft and slow\nEvery little memory returns just like an old song I know`, `The moon is high, the city sleeps\nAnd ${t} is the secret that my heart keeps`])) + '\n\n' +
-                         sec('A — Repeat', pick([`Still the candle flickers when I think of ${t}'s name\nSomehow every evening feels a little bit the same`, `The smoke curls up, the piano plays\nLost inside the rhythm of these ${t} days`])) + '\n\n' +
-                         sec('B — Bridge / Release', pick([`Then the room goes quiet, and the truth comes through\nNothing ever really compares to you`, `But when the morning light breaks through the blind\nYou're the only thing that's on my mind`])) + '\n\n' +
-                         sec('A — Return', pick([`So I'll keep on humming, thinking of ${t}, soft and slow\nHolding every memory close before I let it go`, `The moon goes down, the music fades\nBut the shadow of ${t} always stays`])),
-      'build-drop-multi': (t) => sec('Intro', pick(['Signal rising, counting down the seconds', 'Frequencies aligning in the dark'])) + '\n\n' +
-                                sec('Build 1', pick(['Energy climbing, pressure locked and loaded', 'Pushing to the redline, ready to go'])) + '\n\n' + sec('Drop 1', '') + '\n\n' +
-                                sec('Verse', pick([`Lost inside the pulse of ${t}\nEvery frequency pulling me back in`, `Surfing on the wave of ${t}\nNothing else exists right now`])) + '\n\n' +
-                                sec('Break', pick(['Strip it back, let the low end breathe', 'Total silence before the storm'])) + '\n\n' +
-                                sec('Build 2', pick(['Bigger this time, nowhere left to hide', 'Maximum overdrive, brace for impact'])) + '\n\n' + sec('Drop 2 — Bigger', '') + '\n\n' +
-                                sec('Outro', pick([`Fade into the afterglow of ${t}`, `Ringing out into the night`])),
-      'through-composed': (t) => sec('Movement I', pick([`It began quietly, ${t} barely a sound in the distance`, `First there was nothing, then a whisper of ${t}`])) + '\n\n' +
-                                sec('Movement II', pick([`Slowly it grew — shape, color, weight — impossible to ignore`, `The current pulled stronger, pulling us toward ${t}`])) + '\n\n' +
-                                sec('Movement III', pick([`At its peak, ${t} was the only truth left standing`, `A collision of sound and light, ${t} absolute`])) + '\n\n' +
-                                sec('Movement IV', pick([`And then, gently, it settled — changed, but still whole`, `The echo remains, a testament to ${t}`])),
-      'loop-vamp': (t) => sec('Vamp — Loop A', pick([`${t}, ${t}, carry me through`, `Moving with ${t}, moving with the sound`])) + '\n\n' +
-                         sec('Vamp — Loop B', pick([`Hold the groove, let it move, nothing left to prove`, `Don't stop the beat, feel the heat`])) + '\n\n' +
-                         sec('Vamp — Loop A', pick([`${t}, ${t}, carry me through`, `Moving with ${t}, moving with the sound`])),
-      'power-ballad': (t) => sec('Verse 1 — Sparse', pick([`Just a candle and a quiet room\nThinking slowly about ${t}`, `A single note ringing in the dark\nWaiting for the spark of ${t}`])) + '\n\n' +
-                            sec('Pre-Chorus — Rising', pick([`And the walls start closing in around this feeling`, `I can feel the thunder rolling in the distance`])) + '\n\n' +
-                            sec('Chorus — Full Band', pick([`This is ${t}, bigger than the both of us\nI won't let it go without a fight`, `Standing in the rain, screaming for ${t}\nI will never back down tonight`])) + '\n\n' +
-                            sec('Bridge — Strip Back', pick([`Just my voice, and everything I couldn't say`, `A broken whisper in the hurricane`])) + '\n\n' +
-                            sec('Final Chorus — Everything', pick([`This is ${t}, louder now than yesterday\nI won't let it go, not this time`, `Standing in the rain, screaming for ${t}\nI will never back down tonight`]))
+      'story-arc': (t) => {
+        const s1 = pick([`Before ${t}, I thought I knew where the road would end.`, `In the beginning, ${t} was just a quiet thought in the distance.`]);
+        const s2 = pick([`Then ${t} changed the shape of everything.`, `Suddenly the turning point arrived, leaving no room to look back.`]);
+        const s3 = pick([`I lost what I thought I needed, and found what I could not name.`, `Through the deepest struggle, the path began to reveal itself.`]);
+        const s4 = pick([`Now ${t} is no longer a memory — it is the choice I make.`, `Standing at the summit, the lesson is carved in stone.`]);
+        const s5 = pick([`I carry the lesson forward, lighter than before.`, `Quiet understanding settles as a new journey begins.`]);
+        return sec('Setup', s1) + '\n\n' + sec('Inciting Moment', s2) + '\n\n' + sec('Turn', s3) + '\n\n' + sec('Climax', s4) + '\n\n' + sec('Resolution', s5);
+      },
+      'rap-story': (t) => {
+        const v1 = pick([
+          `I came in with a plan, then ${t} changed the route\nEvery setback put a sharper truth inside the mouth\nNo shortcut, no disguise, just pressure and proof\nI kept the story moving when they said it was through`,
+          `Started on the block where the whispers don't sleep\nCarrying ${t} like a promise that I gotta keep\nCounted every sacrifice, paid off every debt\nTurned another long night into zero regret`
+        ]);
+        const hk = pick([
+          `${t}, that's the chapter I survived\nTurned a closed door to a reason to arrive`,
+          `Never folded under pressure, never walked away\n${t} taught me how to stand and seize the day`
+        ]);
+        const v2 = pick([
+          `Now I measure every lesson by the nights it cost\nWhat I thought was being broken was a map I had lost\n${t} in the rear-view, but the meaning stays close\nI write it in the rhythm, then I let the beat expose it`,
+          `Now the horizon's clear, nothing standing in the lane\nTook all the lessons and dissolved all the pain\nLooking at ${t}, now the vision is complete\nLeaving my legacy written on the street`
+        ]);
+        return sec('Verse 1 — 16 Bars', v1) + '\n\n' + sec('Hook', hk) + '\n\n' + sec('Verse 2 — 16 Bars', v2);
+      },
+      'cinematic-three-act': (t) => {
+        const a1 = pick([`A quiet world held its breath around ${t}.`, `The peace before the trial; ${t} was barely a whisper.`]);
+        const a2 = pick([`The choice arrives; ${t} becomes impossible to ignore.\nStrings rise, percussion gathers, the horizon opens.`, `A clash of destinies begins; the theme of ${t} swells across the orchestra.`]);
+        const a3 = pick([`At the peak, ${t} is transformed from fear into purpose.`, `The grand reckoning shatters all uncertainty in a triumphant fanfare.`]);
+        const cd = pick([`The noise falls away. What remains is the truth learned from the journey.`, `A single solitary cello carries the fading memory into silence.`]);
+        return sec('ACT I — THE WORLD BEFORE', a1) + '\n\n' + sec('ACT II — THE FRACTURE', a2) + '\n\n' + sec('ACT III — THE RECKONING', a3) + '\n\n' + sec('CODA — AFTERMATH', cd);
+      },
+      'indie-diary': (t) => {
+        const v1 = pick([
+          `I wrote down ${t} in the margin of an old receipt\nLike if I named it softly, it might finally leave me`,
+          `Woke up at 3 AM thinking about ${t}\nThe ceiling fan spinning slow, nowhere else to be`
+        ]);
+        const ch = pick([
+          `I don't need a perfect ending\nI just need an honest one\n${t}, I am finally listening`,
+          `It's quiet in this room tonight\nLetting go of what wasn't right\nFinding peace beneath the fading light`
+        ]);
+        const v2 = pick([
+          `The smallest details keep returning\nA street, a voice, a half-lit room\nAll of them pointing back to ${t}`,
+          `Folded postcards in a wooden box\nUnlocking memories behind rusty locks`
+        ]);
+        return sec('Verse 1', v1) + '\n\n' + sec('Chorus', ch) + '\n\n' + sec('Verse 2', v2) + '\n\n' + sec('Outro', 'I close the book, but keep the page');
+      },
+      'call-response': (t) => {
+        const c1 = pick(['What are we running from?', 'Where does the journey lead?']);
+        const r1 = pick([`${t} — and everything we never said.`, `Right through ${t}, where the shadows meet the dawn.`]);
+        const c2 = pick(['What are we reaching for?', 'Who will stand beside us?']);
+        const r2 = pick([`A way through ${t}, a reason to stay.`, `Those who remember what ${t} truly means.`]);
+        const c3 = pick(['Will the night remember us?', 'Is the promise broken?']);
+        const r3 = pick([`Only if we turn ${t} into a song.`, `Never, as long as we carry ${t} forward.`]);
+        return sec('Call', c1) + '\n' + sec('Response', r1) + '\n\n' + sec('Call', c2) + '\n' + sec('Response', r2) + '\n\n' + sec('Call', c3) + '\n' + sec('Response', r3);
+      },
+      'anthem-build': (t) => {
+        const v = pick([`It started quietly with ${t}\nOne small signal underneath the noise`, `A single voice in the darkness calling out\nCarrying ${t} without a single doubt`]);
+        const pre = pick(['Every heartbeat gets louder\nEvery doubt gives way', 'The rhythm takes over\nWe step out of the gray']);
+        const ch = pick([`${t}, we rise together\nHigher than the fear, louder than the weather\nThis is the moment we were made to claim`, `We stand united under open skies\nWatch the fire of ${t} ignite in our eyes`]);
+        const fch = pick([`${t}, let the whole world hear it\nNo looking back, no reason to fear it`, `Unstoppable now, singing out our praise\nLiving the meaning of these golden days`]);
+        return sec('Verse — restrained', v) + '\n\n' + sec('Pre-Chorus — rising', pre) + '\n\n' + sec('Chorus — full', ch) + '\n\n' + sec('Final Chorus — bigger', fch);
+      },
+      'chorus-first': (t) => {
+        const ch = pick([
+          `${t} hits me first, no warning, no delay\nEvery heartbeat says I'm never walking away`,
+          `Right from the start, ${t} is all I need\nA wild fire waiting for the spark to feed`
+        ]);
+        const v1 = pick([
+          `Started as a whisper, ended as a scream\nEverything about ${t} became the only theme`,
+          `Didn't see it coming, hit like a summer storm\nNow everything around me is taking on new form`
+        ]);
+        const br = pick([
+          `Maybe it was never about the ending\nJust about the moment we stopped pretending`,
+          `No second thoughts, no looking behind\nClear as day in an open mind`
+        ]);
+        return sec('Chorus', ch) + '\n\n' + sec('Verse 1', v1) + '\n\n' + sec('Chorus', ch) + '\n\n' + sec('Bridge', br) + '\n\n' + sec('Final Chorus', ch);
+      },
+      'aaba-jazz': (t) => {
+        const a1 = pick([`Late at night I think of ${t}, soft and slow\nEvery little memory returns just like an old song I know`, `Soft candlelight and a glass of wine\nDreaming of ${t} across the borderline`]);
+        const a2 = pick([`Still the candle flickers when I think of ${t}'s name\nSomehow every evening feels a little bit the same`, `The saxophone weeps in the midnight air\nEvery sweet refrain tells me you are there`]);
+        const b = pick([`Then the room goes quiet, and the truth comes through\nNothing ever really compares to you`, `A sudden shift in tempo, a sudden change of heart\nWondering how we ever grew apart`]);
+        return sec('A — Statement', a1) + '\n\n' + sec('A — Repeat', a2) + '\n\n' + sec('B — Bridge / Release', b) + '\n\n' + sec('A — Return', a1);
+      },
+      'build-drop-multi': (t) => {
+        const intro = pick(['Signal rising, counting down the seconds', 'Sub frequencies vibrating through the floor']);
+        const b1 = pick(['Energy climbing, pressure locked and loaded', 'Riser screaming, tension at the redline']);
+        const v = pick([`Lost inside the pulse of ${t}\nEvery frequency pulling me back in`, `Surfing on the bassline of ${t}\nTotal euphoria, totally free`]);
+        const b2 = pick(['Bigger this time, nowhere left to hide', 'Maximum impact, brace for the drop']);
+        return sec('Intro', intro) + '\n\n' + sec('Build 1', b1) + '\n\n[Drop 1]\n\n' + sec('Verse', v) + '\n\n[Break]\nStrip it back, let the low end breathe\n\n' + sec('Build 2', b2) + '\n\n[Drop 2 — Bigger]\n\n[Outro]\nFade into the afterglow of ' + t;
+      },
+      'through-composed': (t) => {
+        const m1 = pick([`It began quietly, ${t} barely a sound in the distance`, `First came the silence, then the gentle arrival of ${t}`]);
+        const m2 = pick([`Slowly it grew — shape, color, weight — impossible to ignore`, `Layer upon layer, the narrative unfolds with unstoppable force`]);
+        const m3 = pick([`At its peak, ${t} was the only truth left standing`, `A towering wave of sound and light consuming the night`]);
+        const m4 = pick([`And then, gently, it settled — changed, but still whole`, `Dissolving into warm resonance, peaceful and complete`]);
+        return sec('Movement I', m1) + '\n\n' + sec('Movement II', m2) + '\n\n' + sec('Movement III', m3) + '\n\n' + sec('Movement IV', m4);
+      },
+      'loop-vamp': (t) => {
+        const la = pick([`${t}, ${t}, carry me through`, `Hold the groove, feel ${t} in the air`]);
+        const lb = pick(['Hold the groove, let it move, nothing left to prove', 'Step into the pocket, stay right there']);
+        return sec('Vamp — Loop A', la) + '\n\n' + sec('Vamp — Loop B', lb) + '\n\n' + sec('Vamp — Loop A', la);
+      },
+      'power-ballad': (t) => {
+        const v1 = pick([`Just a candle and a quiet room\nThinking slowly about ${t}`, `Looking out across the rainy street\nRemembering the moments bittersweet`]);
+        const pre = pick(['And the walls start closing in around this feeling', 'The strings begin to swell as the memories return']);
+        const ch = pick([`This is ${t}, bigger than the both of us\nI won't let it go without a fight`, `Hear my voice rising through the dark\nReigniting every single faded spark`]);
+        const br = pick(['Just my voice, and everything I couldn't say', 'Stripped to the bone, nothing left to hide']);
+        return sec('Verse 1 — Sparse', v1) + '\n\n' + sec('Pre-Chorus — Rising', pre) + '\n\n' + sec('Chorus — Full Band', ch) + '\n\n' + sec('Bridge — Strip Back', br) + '\n\n' + sec('Final Chorus — Everything', ch);
+      }
     };
 
     function updateLyricMetrics() {
@@ -1251,30 +1365,58 @@
     }
 
     function getSelectedPrimaryGenreName() {
-      const select = $('genreSelect'); if (!select) return '';
-      const option = select.options && select.selectedIndex >= 0 ? select.options[select.selectedIndex] : null;
+      const select = $('genreSelect');
+      if (!select) return '';
+      const option = select.options && select.selectedIndex >= 0
+        ? select.options[select.selectedIndex]
+        : null;
       const name = option ? String(option.textContent || option.value || '').trim() : '';
       return name === 'Select a sound or genre' || name === 'Custom description...' ? '' : name;
     }
 
     function getLyricStyleMarkers() {
-      const timelineMarkers = getMorphData(); const primary = getSelectedPrimaryGenreName(); const fused = getFuseSelectValues();
+      const timelineMarkers = getMorphData();
+      const primary = getSelectedPrimaryGenreName();
+      const fused = getFuseSelectValues();
+
       if (!timelineMarkers.length && !fused.length) return timelineMarkers;
-      const names = []; const seen = new Set();
-      const add = (name) => { const value = String(name || '').trim(); const key = value.toLowerCase(); if (value && !seen.has(key)) { seen.add(key); names.push(value); } };
-      add(primary); fused.forEach(add); timelineMarkers.forEach(m => add(m.style));
-      return names.map((style, i) => ({ time: i === 0 ? '0:00' : '', style, duration: 15, seconds: i }));
+
+      const names = [];
+      const seen = new Set();
+      const add = (name) => {
+        const value = String(name || '').trim();
+        const key = value.toLowerCase();
+        if (value && !seen.has(key)) {
+          seen.add(key);
+          names.push(value);
+        }
+      };
+
+      add(primary);
+      fused.forEach(add);
+      timelineMarkers.forEach(m => add(m.style));
+
+      return names.map((style, i) => ({
+        time: i === 0 ? '0:00' : '',
+        style,
+        duration: 15,
+        seconds: i
+      }));
     }
 
     function applyMorphCuesToLyrics(baseLyrics) {
       if ($('morphMethod').value !== 'structural') return baseLyrics;
+
       const markers = getLyricStyleMarkers();
       if (!markers.length) return baseLyrics;
 
       const primary = getSelectedPrimaryGenreName();
       if (primary) {
         const first = markers.findIndex(m => String(m.style).trim().toLowerCase() === primary.toLowerCase());
-        if (first > 0) { const [base] = markers.splice(first, 1); markers.unshift(base); }
+        if (first > 0) {
+          const [base] = markers.splice(first, 1);
+          markers.unshift(base);
+        }
       }
 
       const lines = String(baseLyrics || '').split('\n');
@@ -1283,109 +1425,196 @@
         if (/^\s*\[[^\]]+\]\s*$/.test(line) && !line.includes('[Theme:')) headingIndexes.push(i);
       });
 
-      if (!headingIndexes.length) return `${buildStructuralCueBlock()}\n\n${baseLyrics}`;
+      if (!headingIndexes.length) {
+        return `${buildStructuralCueBlock()}\n\n${baseLyrics}`;
+      }
 
+      const tempoDesc = getTempoCurveDescriptor();
+      const stemDesc = getStemMorphDescriptor();
       const insertions = new Map();
       markers.forEach((m, i) => {
         const cue = getStyleCueDetails(m.style, true);
         const sectionIndex = Math.min(headingIndexes.length - 1, Math.floor(i * headingIndexes.length / markers.length));
         const at = headingIndexes[sectionIndex];
-        const block = `[STYLE ${i + 1}: ${cue.style.toUpperCase()}]${cue.tempo ? `\n[TEMPO: ${cue.tempo}]` : ''}${cue.instruments.length ? `\n[LAYER: ${cue.instruments.join(', ')}]` : ''}${i < markers.length - 1 ? `\n[TRANSITION: ${getTempoCurveDescriptor()}; preserve melody]` : ''}`;
+        const tempo = cue.tempo ? `\n[TEMPO: ${cue.tempo}]` : '';
+        const layer = cue.instruments.length ? `\n[LAYER: ${cue.instruments.join(', ')}]` : '';
+        const transition = i < markers.length - 1 ? `\n[TRANSITION: ${tempoDesc}; ${stemDesc}; preserve melody]` : '';
+        const block = `[STYLE ${i + 1}: ${cue.style.toUpperCase()}]${tempo}${layer}${transition}`;
         insertions.set(at, (insertions.get(at) || '') + block + '\n');
       });
 
       const out = [];
-      lines.forEach((line, i) => { if (insertions.has(i)) out.push(insertions.get(i)); out.push(line); });
+      lines.forEach((line, i) => {
+        if (insertions.has(i)) out.push(insertions.get(i));
+        out.push(line);
+      });
       return out.join('\n');
     }
 
     function generateLyrics() {
       const includeCues = $('includeCues').checked;
-      const rawTopic = $('topicInput').value.trim() || 'the feeling';
-      const antiBleed = `[Theme: ${rawTopic}]\n///*****///\n\n`;
+      const rawInput = $('topicInput').value.trim();
+      const topic = formatTopic(rawInput);
+      const antiBleed = `[Theme: ${topic}]\n///*****///\n\n`;
       let text;
       
       if ($('vocalSelect').value === 'instrumental') {
         text = applyMorphCuesToLyrics(`${antiBleed}[Instrumental Arrangement - No Vocals]\n\n[Movement I: Atmospheric Introduction]\n\n[Movement II: The Groove Enters]\n\n[Movement III: The Emotional Peak]\n\n[Movement IV: Resolution & Decay]\n\n[Fade Out]`);
       } else {
         const builder = LYRIC_BUILDERS[$('structureSelect').value] || LYRIC_BUILDERS['pop-standard'];
-        text = applyMorphCuesToLyrics(antiBleed + builder(rawTopic));
+        text = applyMorphCuesToLyrics(antiBleed + builder(topic));
       }
       $('lyricsOutput').value = includeCues ? text : stripPerformanceCues(text);
       updateLyricMetrics();
     }
 
     function stripPerformanceCues(text) {
-      return String(text || '').split('\n').filter(line => {
-        const trimmed = line.trim();
-        if (!/^\[[^\]]+\]$/.test(trimmed)) return true;
-        return /^\[(STYLE|SECTION|TEMPO|LAYER|TRANSITION|Theme)\b/i.test(trimmed);
-      }).join('\n').replace(/\n{3,}/g, '\n\n').trim();
+      return String(text || '')
+        .split('\n')
+        .filter(line => {
+          const trimmed = line.trim();
+          if (!/^\[[^\]]+\]$/.test(trimmed)) return true;
+          return /^\[(STYLE|SECTION|TEMPO|LAYER|TRANSITION|Theme)\b/i.test(trimmed);
+        })
+        .join('\n')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
     }
 
-    let audioCtx = null; let droneOsc = null;
+    // Touch-optimized Audio API initialization for iPad
+    let audioCtx = null;
+    let droneOsc = null;
+    
     function ensureAudioContext() {
-      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      if (audioCtx.state === 'suspended') audioCtx.resume();
+      if (!audioCtx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioContext();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
     }
 
     $('toneBtn').addEventListener('click', (e) => {
-      e.preventDefault(); ensureAudioContext();
+      e.preventDefault();
+      ensureAudioContext();
+      
       if (droneOsc) {
-        droneOsc.stop(); droneOsc.disconnect(); droneOsc = null;
-        $('toneIcon').textContent = '🎵'; $('toneText').textContent = 'Pitch Drone'; showToast('Pitch drone stopped');
+        droneOsc.stop();
+        droneOsc.disconnect();
+        droneOsc = null;
+        $('toneIcon').textContent = '🎵';
+        $('toneText').textContent = 'Pitch Drone';
+        showToast('Pitch drone stopped');
       } else {
-        droneOsc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); droneOsc.type = 'sine'; droneOsc.frequency.value = getTuningHz();
-        gain.gain.value = 0.05; droneOsc.connect(gain); gain.connect(audioCtx.destination); droneOsc.start();
-        $('toneIcon').textContent = '🔊'; $('toneText').textContent = `${droneOsc.frequency.value}Hz Playing`; showToast(`Playing ${droneOsc.frequency.value}Hz reference drone`);
+        droneOsc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        droneOsc.type = 'sine';
+        droneOsc.frequency.value = getTuningHz();
+        gain.gain.value = 0.05;
+        droneOsc.connect(gain);
+        gain.connect(audioCtx.destination);
+        droneOsc.start();
+        $('toneIcon').textContent = '🔊';
+        $('toneText').textContent = `${droneOsc.frequency.value}Hz Playing`;
+        showToast(`Playing ${droneOsc.frequency.value}Hz reference drone`);
       }
     });
 
     let taps = [];
     $('tapTempoBtn').addEventListener('click', (e) => {
-      e.preventDefault(); ensureAudioContext();
-      const now = performance.now(); taps.push(now); if(taps.length > 4) taps.shift();
+      e.preventDefault();
+      ensureAudioContext();
+      
+      const now = performance.now();
+      taps.push(now);
+      if(taps.length > 4) taps.shift();
+      
       if(taps.length >= 2) {
-        const avg = (taps[taps.length-1] - taps[0]) / (taps.length - 1); const bpm = Math.round(60000 / avg);
-        if(bpm > 40 && bpm < 240) { $('tapTempoText').textContent = `${bpm} BPM`; $('tempoInput').value = `${bpm} BPM`; compilePrompt(); }
+        const avg = (taps[taps.length-1] - taps[0]) / (taps.length - 1);
+        const bpm = Math.round(60000 / avg);
+        if(bpm > 40 && bpm < 240) {
+          $('tapTempoText').textContent = `${bpm} BPM`;
+          $('tempoInput').value = `${bpm} BPM`;
+          compilePrompt();
+        }
       }
-      const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.frequency.value = 800;
-      gain.gain.setValueAtTime(0.1, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
-      osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + 0.05);
+      
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.frequency.value = 800;
+      gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.05);
     });
 
+    // History Management
     function saveHistory() {
-      const p = $('promptOutput').value; if (!p) return;
+      const p = $('promptOutput').value;
+      if (!p) return;
       history.unshift({ prompt: p, engine: currentEngine, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) });
       if (history.length > 6) history.pop();
-      try { localStorage.setItem('pw_history_v2', JSON.stringify(history)); } catch(e) {} renderHistory();
+      try { localStorage.setItem('pw_history_v2', JSON.stringify(history)); } catch(e) {}
+      renderHistory();
     }
 
     function renderHistory() {
-      const container = $('historyContainer'); container.textContent = '';
-      if (!history.length) { container.innerHTML = '<div class="text-xs text-studio-500 italic py-2">No saved generations yet. Everything stays strictly on your local browser.</div>'; return; }
+      const container = $('historyContainer');
+      container.textContent = '';
+      if (!history.length) {
+        container.innerHTML = '<div class="text-xs text-studio-500 italic py-2">No saved generations yet. Everything stays strictly on your local browser.</div>';
+        return;
+      }
       history.forEach(item => {
-        const card = document.createElement('div'); card.className = 'p-3 rounded-lg bg-studio-950 border border-studio-800 touch-target active:border-amber-500/50 transition-colors cursor-pointer';
+        const card = document.createElement('div');
+        card.className = 'p-3 rounded-lg bg-studio-950 border border-studio-800 touch-target active:border-amber-500/50 transition-colors cursor-pointer';
         card.innerHTML = `<div class="flex justify-between text-[10px] text-studio-400 mb-1"><span class="uppercase text-amber-400">${item.engine}</span><span>${item.time}</span></div><div class="text-xs font-mono text-studio-200 line-clamp-2">${item.prompt}</div>`;
-        card.onclick = () => { $('promptOutput').value = item.prompt; $('charCounter').textContent = `${item.prompt.length} chars`; showToast('Loaded prompt from history'); };
+        card.onclick = () => {
+          $('promptOutput').value = item.prompt;
+          $('charCounter').textContent = `${item.prompt.length} chars`;
+          showToast('Loaded prompt from history');
+        };
         container.appendChild(card);
       });
     }
 
-    $('downloadLyricsBtn').addEventListener('click', (e) => {       e.preventDefault(); const content =$('lyricsOutput').value; if (!content) return showToast('No lyrics to download', '❌');
+    // File Downloads
+    $('downloadLyricsBtn').addEventListener('click', (e) => {
+      e.preventDefault();
+      const content = $('lyricsOutput').value;
+      if (!content) return showToast('No lyrics to download', '❌');
+      
       const filename = ($('styleInput').value || 'song_lyrics').toLowerCase().replace(/[^a-z0-9]/g, '_') + '.txt';
-      const blob = new Blob([content], { type: 'text/plain;charset=utf-8' }); const url = URL.createObjectURL(blob);
-      const a = document.createElement('a'); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); document.body.removeChild(a);
-      setTimeout(() => URL.revokeObjectURL(url), 1000); showToast(`Exported ${filename}`);
+      const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      showToast(`Exported ${filename}`);
     });
 
+    // Preset Buttons
     document.querySelectorAll('.preset-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        const pKey = btn.getAttribute('data-preset'); const pData = PRESETS[pKey]; if (!pData) return;
-        clearFuseSlots(); const profile = ARCHETYPES[pData.genre] || {};
-        $('genreSelect').value = pData.genre; $('styleInput').value = pData.style || profile.style;
-        $('moodInput').value = pData.mood \vert{}\vert{} profile.mood; $('tempoInput').value = pData.tempo || profile.tempo;
-        $('vocalSelect').value = pData.vocal \vert{}\vert{} profile.vocalType; $('topicInput').value = pData.topic || profile.topic;
+        const pKey = btn.getAttribute('data-preset');
+        const pData = PRESETS[pKey];
+        if (!pData) return;
+        
+        clearFuseSlots();
+        const profile = getGenreProfile(pData.genre) || ARCHETYPES[pData.genre] || {};
+        $('genreSelect').value = pData.genre;
+        $('styleInput').value = pData.style || profile.style || '';
+        $('moodInput').value = pData.mood \vert{}\vert{} profile.mood \vert{}\vert{} '';$('tempoInput').value = pData.tempo || profile.tempo || '';
+        $('vocalSelect').value = pData.vocal \vert{}\vert{} profile.vocalType \vert{}\vert{} 'auto';$('topicInput').value = pData.topic || profile.topic || '';
         
         if (pKey === 'deep-focus-ambient') {
             $('flowTuning').value = '432hz';$('flowLoop').value = 'seamless';
@@ -1397,101 +1626,172 @@
           currentEngine = pData.engine;
           document.querySelectorAll('.engine-card').forEach(c => {
             const isMatch = c.getAttribute('data-engine') === currentEngine;
-            c.classList.toggle('active', isMatch); c.classList.toggle('border-amber-500', isMatch);
-            c.classList.toggle('bg-amber-500/10', isMatch); c.classList.toggle('border-studio-800', !isMatch);
+            c.classList.toggle('active', isMatch);
+            c.classList.toggle('border-amber-500', isMatch);
+            c.classList.toggle('bg-amber-500/10', isMatch);
+            c.classList.toggle('border-studio-800', !isMatch);
             if (isMatch) $('quickBundleBtn').textContent = `📋 Copy Bundle`;
           });
           $('flowSettings').classList.toggle('hidden', currentEngine !== 'flow');
         }
         
-        activeTags = { vocals: profile.vocals || [], instruments: profile.instruments || [], production: profile.production || [], rhythm: profile.rhythm || [] };
-        tagStatus = {}; [...activeTags.vocals, ...activeTags.instruments, ...activeTags.production, ...activeTags.rhythm].forEach(t => tagStatus[t] = true);
-        renderChips(); compilePrompt(); generateLyrics();
+        activeTags = { vocals: (profile.vocals || []).slice(), instruments: (profile.instruments || []).slice(), production: (profile.production || []).slice(), rhythm: (profile.rhythm || []).slice() };
+        tagStatus = {};
+        [...activeTags.vocals, ...activeTags.instruments, ...activeTags.production, ...activeTags.rhythm].forEach(t => tagStatus[t] = true);
+        
+        renderChips();
+        compilePrompt();
+        generateLyrics();
       });
     });
 
     $('genreSelect').addEventListener('change', applyGenreSelection);$('addMorphBtn').addEventListener('click', () => {
-      const last = getMorphData().slice(-1)[0]; const nextSeconds = last ? last.seconds + 60 : 120;
+      const last = getMorphData().slice(-1)[0];
+      const nextSeconds = last ? last.seconds + 60 : 120;
       morphMarkers.push({ time: `${Math.floor(nextSeconds / 60)}:${String(nextSeconds % 60).padStart(2, '0')}`, style: '', duration: Number($('morphDuration').value) });
-      renderMorphMarkers(); compilePrompt(); generateLyrics();
+      renderMorphMarkers();
+      compilePrompt();
+      generateLyrics();
     });
     
-    function refreshMorphSettings() { $('chainPanel').classList.toggle('hidden',$('morphMethod').value !== 'chain'); compilePrompt(); generateLyrics(); }
+    function refreshMorphSettings() {
+      $('chainPanel').classList.toggle('hidden',$('morphMethod').value !== 'chain');
+      compilePrompt();
+      generateLyrics();
+    }
     ['morphMethod','morphDuration','morphTempoCurve','morphStems'].forEach(id => $(id).addEventListener('change', refreshMorphSettings));
 
-    const MORPH_PRESETS = { seamless: { morphMethod: 'structural', morphDuration: '45', morphTempoCurve: 'adaptive', morphStems: 'enabled' }, hardcut: { morphMethod: 'structural', morphDuration: '8', morphTempoCurve: 'bar-aligned', morphStems: 'disabled' }};
+    const MORPH_PRESETS = {
+      seamless: { morphMethod: 'structural', morphDuration: '45', morphTempoCurve: 'adaptive', morphStems: 'enabled' },
+      hardcut: { morphMethod: 'structural', morphDuration: '8', morphTempoCurve: 'bar-aligned', morphStems: 'disabled' },
+      chain: { morphMethod: 'chain', morphDuration: '15', morphTempoCurve: 'linear', morphStems: 'enabled' }
+    };
     document.querySelectorAll('.morph-preset-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        const preset = MORPH_PRESETS[btn.getAttribute('data-morph-preset')]; if (!preset) return;
-        Object.keys(preset).forEach(id => { $(id).value = preset[id]; }); refreshMorphSettings(); showToast(`${btn.textContent.trim()} preset applied`, '🌀');
+        const preset = MORPH_PRESETS[btn.getAttribute('data-morph-preset')];
+        if (!preset) return;
+        Object.keys(preset).forEach(id => { $(id).value = preset[id]; });
+        refreshMorphSettings();
+        showToast(`${btn.textContent.trim()} preset applied`, '🌀');
       });
     });
 
-    renderMorphMarkers(); $('addFuseBtn').addEventListener('click', createFuseSlot);$('fuseBlendMode').addEventListener('change', applyGenreSelection);
+    renderMorphMarkers();
+    $('addFuseBtn').addEventListener('click', createFuseSlot);$('fuseBlendMode').addEventListener('change', applyGenreSelection);
 
     document.querySelectorAll('.engine-card').forEach(card => {
       card.addEventListener('click', () => {
         currentEngine = card.getAttribute('data-engine');
         document.querySelectorAll('.engine-card').forEach(c => {
-          c.classList.toggle('active', c === card); c.classList.toggle('border-amber-500', c === card);
-          c.classList.toggle('bg-amber-500/10', c === card); c.classList.toggle('border-studio-800', c !== card);
+          c.classList.toggle('active', c === card);
+          c.classList.toggle('border-amber-500', c === card);
+          c.classList.toggle('bg-amber-500/10', c === card);
+          c.classList.toggle('border-studio-800', c !== card);
         });
-        $('flowSettings').classList.toggle('hidden', currentEngine !== 'flow');$('quickBundleBtn').textContent = `📋 Copy Bundle`; compilePrompt();
+        $('flowSettings').classList.toggle('hidden', currentEngine !== 'flow');$('quickBundleBtn').textContent = `📋 Copy Bundle`;
+        compilePrompt();
       });
     });
 
-    $('tabPromptBtn').onclick = () => {$('promptPane').classList.remove('hidden'); $('lyricsPane').classList.add('hidden');$('tabPromptBtn').classList.add('text-amber-400', 'bg-studio-850', 'border-amber-500/30'); $('tabPromptBtn').classList.remove('text-studio-400');$('tabLyricsBtn').classList.remove('text-amber-400', 'bg-studio-850', 'border-amber-500/30', 'active:bg-studio-800'); $('tabLyricsBtn').classList.add('text-studio-400');     };$('tabLyricsBtn').onclick = () => {
+    // Clean Tab UI Toggling
+    $('tabPromptBtn').onclick = () => {$('promptPane').classList.remove('hidden');
+      $('lyricsPane').classList.add('hidden');$('tabPromptBtn').classList.add('text-amber-400', 'bg-studio-850', 'border-amber-500/30');
+      $('tabPromptBtn').classList.remove('text-studio-400');$('tabLyricsBtn').classList.remove('text-amber-400', 'bg-studio-850', 'border-amber-500/30');
+      $('tabLyricsBtn').classList.add('text-studio-400');     };$('tabLyricsBtn').onclick = () => {
       $('lyricsPane').classList.remove('hidden');$('promptPane').classList.add('hidden');
-      $('tabLyricsBtn').classList.add('text-amber-400', 'bg-studio-850', 'border-amber-500/30', 'active:bg-studio-800');$('tabLyricsBtn').classList.remove('text-studio-400');
+      $('tabLyricsBtn').classList.add('text-amber-400', 'bg-studio-850', 'border-amber-500/30');$('tabLyricsBtn').classList.remove('text-studio-400');
       $('tabPromptBtn').classList.remove('text-amber-400', 'bg-studio-850', 'border-amber-500/30');$('tabPromptBtn').classList.add('text-studio-400');
     };
 
     $('addTraitBtn').onclick = () => {
       const val = $('newTraitInput').value.trim();
-      if (!val || tagStatus[val]) return; 
-      activeTags.production.push(val); tagStatus[val] = true; $('newTraitInput').value = '';
-      renderChips(); compilePrompt();
+      if (!val || tagStatus[val]) return;
+      activeTags.production.push(val);
+      tagStatus[val] = true;
+      $('newTraitInput').value = '';
+      renderChips();
+      compilePrompt();
     };
 
     document.querySelectorAll('.metatag-btn, .insert-cue').forEach(btn => {
       btn.onclick = () => {
         const meta = btn.getAttribute('data-meta');
-        if (meta) { $('promptOutput').value += ($('promptOutput').value ? ' | ' : '') + meta; compilePrompt(); return; }
+        if (meta) {
+          $('promptOutput').value += ($('promptOutput').value ? ' | ' : '') + meta;
+          compilePrompt();
+          return;
+        }
         const cue = btn.getAttribute('data-cue');
-        if (cue) { $('lyricsOutput').value += `\n${cue}\n`; updateLyricMetrics(); $('lyricsOutput').scrollTop =$('lyricsOutput').scrollHeight; }
+        if (cue) {
+          $('lyricsOutput').value += `\n${cue}\n`;
+          updateLyricMetrics();
+          $('lyricsOutput').scrollTop =$('lyricsOutput').scrollHeight;
+        }
       };
     });
 
     $('copyChainBtn').onclick = () => copyText($('chainOutput').value, 'Extension Steps Copied!');
 
-    ['styleInput', 'moodInput', 'tempoInput'].forEach(id => { $(id).addEventListener('input', compilePrompt); });
+    ['styleInput', 'moodInput', 'tempoInput'].forEach(id => {
+      $(id).addEventListener('input', compilePrompt);
+    });
 
     $('customSoundInput').addEventListener('input', () => {
-      const customText = $('customSoundInput').value.trim(); const fuseNames = getFuseSelectValues();$('styleInput').value = fuseNames.length ? [customText, fuseGenreProfiles(fuseNames)?.style || ''].filter(Boolean).join(', ') : customText;
+      const customText = $('customSoundInput').value.trim();
+      const fuseNames = getFuseSelectValues();
+      if (fuseNames.length) {
+        const fused = fuseGenreProfiles(fuseNames);
+        $('styleInput').value = [customText, fused ? fused.style : ''].filter(Boolean).join(', ');
+      } else {
+        $('styleInput').value = customText;
+      }
       compilePrompt();
     });
     
-    ['vocalSelect', 'charLimit', 'tagBudget', 'flowTuning', 'flowLoop'].forEach(id => { $(id).addEventListener('change', compilePrompt); });
-    ['structureSelect', 'vocalSelect', 'includeCues'].forEach(id => { $(id).addEventListener('change', generateLyrics); });
-    $('topicInput').addEventListener('change', generateLyrics);$('generateBtn').onclick = () => { compilePrompt(); generateLyrics(); saveHistory(); showToast('Output generated!', '✨'); };
+    ['vocalSelect', 'charLimit', 'tagBudget', 'flowTuning', 'flowLoop'].forEach(id => {
+      $(id).addEventListener('change', compilePrompt);
+    });
 
-    $('clearAllBtn').onclick = () => {$('genreSelect').value = '';$('customSoundInput').value = '';$('customSoundInput').classList.add('hidden'); 
-      $('styleInput').value = '';$('moodInput').value = ''; $('tempoInput').value = '';$('topicInput').value = ''; 
-      $('promptOutput').value = '';$('lyricsOutput').value = '';
-      $('vocalSelect').value = 'auto';$('charLimit').value = '500'; $('tagBudget').value = '6';$('morphDuration').value = '15'; $('morphTempoCurve').value = 'adaptive';$('morphStems').value = 'enabled';
-      clearFuseSlots(); morphMarkers = [{ time: '0:00', style: '', duration: 15 }, { time: '1:00', style: '', duration: 15 }]; 
-      $('morphMethod').value = 'structural'; renderMorphMarkers(); $('chainPanel').classList.add('hidden');$('chainOutput').value = '';
-      currentEngine = 'suno'; document.querySelector('.engine-card[data-engine="suno"]').click();
-      activeTags = { vocals: [], instruments: [], production: [], rhythm: [] }; tagStatus = {}; renderChips(); compilePrompt();
+    ['structureSelect', 'vocalSelect', 'includeCues'].forEach(id => {
+      $(id).addEventListener('change', generateLyrics);
+    });
+    $('topicInput').addEventListener('change', generateLyrics);$('generateBtn').onclick = () => {
+      compilePrompt();
+      generateLyrics();
+      saveHistory();
+      showToast('Output generated!', '✨');
     };
 
-    $('clearHistoryBtn').onclick = () => { history = []; try { localStorage.removeItem('pw_history_v2'); } catch(e) {} renderHistory(); };$('rerollLyricsBtn').onclick = () => { generateLyrics(); showToast('Fresh lyrics generated!', '🎲'); };
+    $('clearAllBtn').onclick = () => {$('genreSelect').value = '';
+      $('customSoundInput').value = '';$('customSoundInput').classList.add('hidden'); 
+      $('styleInput').value = '';$('moodInput').value = ''; 
+      $('tempoInput').value = '';$('topicInput').value = ''; 
+      $('promptOutput').value = '';$('lyricsOutput').value = '';
+      $('vocalSelect').value = 'auto';$('charLimit').value = '500'; 
+      $('tagBudget').value = '6';$('morphDuration').value = '15'; 
+      $('morphTempoCurve').value = 'adaptive';$('morphStems').value = 'enabled';
+      clearFuseSlots();
+      morphMarkers = [{ time: '0:00', style: '', duration: 15 }, { time: '1:00', style: '', duration: 15 }]; 
+      $('morphMethod').value = 'structural'; 
+      renderMorphMarkers(); 
+      $('chainPanel').classList.add('hidden');$('chainOutput').value = '';
+      currentEngine = 'suno'; 
+      document.querySelector('.engine-card[data-engine="suno"]').click();
+      activeTags = { vocals: [], instruments: [], production: [], rhythm: [] }; 
+      tagStatus = {}; 
+      renderChips(); 
+      compilePrompt();
+    };
+
+    $('clearHistoryBtn').onclick = () => { history = []; try { localStorage.setItem('pw_history_v2'); } catch(e) {} renderHistory(); };$('rerollLyricsBtn').onclick = () => { generateLyrics(); showToast('Fresh lyrics generated!', '🎲'); };
     $('copyPromptBtn').onclick = () => copyText($('promptOutput').value, 'Prompt Copied!');
     $('copyNegBtn').onclick = () => copyText($('negOutput').value, 'Negative Copied!');
     $('copyLyricsBtn').onclick = () => copyText($('lyricsOutput').value, 'Lyrics Copied!');
     $('quickBundleBtn').onclick = () => copyText($('promptOutput').value + '\n\n' + $('lyricsOutput').value, 'Bundle Copied!');$('lyricsOutput').addEventListener('input', updateLyricMetrics);
 
-    document.querySelector('.preset-btn').click(); renderHistory();
+    // Initial boot on startup
+    document.querySelector('.preset-btn').click();
+    renderHistory();
   })();
   </script>
 </body>
