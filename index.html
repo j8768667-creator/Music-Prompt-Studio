@@ -567,16 +567,119 @@
 
     const GENRE_PROFILES = Object.assign({}, ARCHETYPES);
 
+    // Layer-only variants for fallback genres. These are deliberately kept separate
+    // from the main profile's `instruments` so existing prompt generation, fusion,
+    // tags, mood, tempo, vocals, production, and rhythm remain unchanged.
+    const FALLBACK_LAYER_VARIANTS = {
+      'Pop & Contemporary': [
+        ['Bright synth plucks', 'Tight electronic drums'], ['Airy pad chords', 'Punchy pop bass'],
+        ['Glossy piano stabs', 'Crisp programmed percussion'], ['Muted rhythm guitar', 'Warm synth bass'],
+        ['Bell-like keys', 'Snappy clap and kick groove'], ['Dreamy polysynths', 'Soft electronic percussion'],
+        ['Acoustic piano accents', 'Deep modern pop bass'], ['Shimmering arpeggiator', 'Dry punchy drums'],
+        ['Vocal-chop synth hook', 'Round sub bass'], ['Clean electric guitar', 'Bright drum-machine groove'],
+        ['Analog synth strings', 'Tight pop kick and snare'], ['Plucked digital keys', 'Bouncy synth bass'],
+        ['Wide chorus guitar', 'Layered electronic drums'], ['Soft felt piano', 'Subtle synth pulse']
+      ],
+      'R&B, Soul & Funk': [
+        ['Rhodes electric piano', 'Round fingerstyle bass'], ['Clavinet funk stabs', 'Dry pocket drums'],
+        ['Wurlitzer chords', 'Muted electric bass'], ['Hammond organ swells', 'Ghost-note drum groove'],
+        ['Warm synth keys', 'Deep soul bass'], ['Clean guitar comping', 'Loose funk drums'],
+        ['Moody electric piano', 'Subby bass groove'], ['Talkbox-style synth lead', 'Tight disco-funk drums'],
+        ['Vintage string pad', 'Syncopated bass guitar'], ['Soft organ chords', 'Brush-and-stick pocket drums'],
+        ['Filtered synth chords', 'Slap bass accents'], ['Piano soul fills', 'Live hi-hat pocket']
+      ],
+      'Hip-Hop & Rap': [
+        ['Deep 808 bass', 'Tight trap hi-hats'], ['Dusty sampled piano', 'Boom-bap drum break'],
+        ['Dark synth bass', 'Sparse drill percussion'], ['Vinyl-sampled keys', 'Loose kick-and-snare pocket'],
+        ['Bell synth motif', 'Rolling triplet hats'], ['Muted guitar sample', 'Heavy sub kick'],
+        ['Warm Rhodes sample', 'Crisp rimshot groove'], ['Moody string sample', 'Syncopated 808 pattern'],
+        ['Chopped vocal texture', 'Dry punchy drums'], ['Analog bass synth', 'Off-grid hip-hop hats'],
+        ['Jazzy piano loop', 'Snare-forward boom-bap kit'], ['Distorted bass texture', 'Rapid drill hats'],
+        ['Flute sample lead', 'Deep kick and clap'], ['Lo-fi cassette keys', 'Dusty drum break']
+      ],
+      'Electronic & Dance': [
+        ['Analog synth bass', 'Four-on-the-floor kick'], ['Bright trance pluck', 'Rolling club percussion'],
+        ['Deep house organ', 'Shuffled hi-hat groove'], ['Acid bass synth', 'Crisp techno hats'],
+        ['Granular pad texture', 'Breakbeat drum kit'], ['FM bell synth', 'Tight electro drums'],
+        ['Vocoder chord stack', 'Pumping house kick'], ['Sawtooth lead synth', 'Driving gated drums'],
+        ['Arpeggiated synth sequence', 'Sidechained bass pulse'], ['Dub siren synth', 'Skittering garage drums'],
+        ['Glassy digital pad', 'Jungle breakbeat kit'], ['Wavetable bass growl', 'Half-time electronic drums'],
+        ['Warm tape synth', 'Loose downtempo percussion'], ['Noisy industrial synth', 'Metallic machine drums'],
+        ['Retro string synth', 'Punchy electro kick'], ['Digital bell arpeggio', 'Deep sub-bass pulse'],
+        ['Filtered vocal chop', 'Disco-house drum groove'], ['FM bass sequence', 'Tight breakbeat snare'],
+        ['Lush ambient pad', 'Soft electronic pulse'], ['Bitcrushed lead synth', 'Rigid drum-machine beat'],
+        ['Detuned polysynth', 'Rolling rave percussion'], ['Neon synth brass', 'Driving dance kick'],
+        ['Subtle tape-warp pad', 'Minimal electronic clicks']
+      ],
+      'Rock & Alternative': [
+        ['Crunch electric guitar', 'Live drum kit'], ['Jangly clean guitar', 'Driving bass guitar'],
+        ['Fuzz guitar wall', 'Roomy acoustic drums'], ['Palm-muted guitar riff', 'Punchy rock bass'],
+        ['Arpeggiated clean guitar', 'Snare-forward drum kit'], ['Phaser guitar texture', 'Tom-heavy live drums'],
+        ['Octave guitar lead', 'Overdriven bass guitar'], ['Feedback guitar swell', 'Wide room drums'],
+        ['Acoustic-electric guitar', 'Dry indie drum kit'], ['Distorted power chords', 'Crash-heavy chorus drums'],
+        ['Tremolo guitar line', 'Steady bass-and-kick drive'], ['Chorus-soaked guitar', 'Loose garage drums'],
+        ['Baritone guitar riff', 'Deep live bass'], ['12-string guitar shimmer', 'Natural room drums'],
+        ['Muted guitar pulse', 'Tight alternative rock kit'], ['Lead guitar harmonics', 'Floor-tom accents']
+      ],
+      'Metal': [
+        ['Down-tuned rhythm guitars', 'Double-kick drums'], ['Palm-muted guitars', 'Crushing bass guitar'],
+        ['Tremolo-picked guitars', 'Blast-beat drums'], ['Djent guitar chugs', 'Tight kick drum pattern'],
+        ['Harmonized lead guitars', 'Thunderous toms'], ['Blackened guitar tremolo', 'Rapid double-kick drums'],
+        ['Doom guitar drones', 'Slow heavy tom groove'], ['Metalcore guitar breakdown', 'Punchy kick-and-snare'],
+        ['High-gain guitar harmonies', 'Driving bass drum'], ['Industrial metal synth layer', 'Rigid heavy drums'],
+        ['Progressive lead guitar', 'Complex live drum kit'], ['Sludge guitar fuzz', 'Huge low-tuned bass']
+      ],
+      'Country, Folk & Roots': [
+        ['Acoustic guitar picking', 'Brush-and-kick country drums'], ['Pedal steel phrases', 'Upright bass pulse'],
+        ['Banjo rolls', 'Acoustic rhythm guitar'], ['Mandolin chop', 'Walking upright bass'],
+        ['Fiddle lead', 'Snare-and-kick two-step'], ['Dobro slide guitar', 'Warm bass fiddle'],
+        ['12-string acoustic guitar', 'Light brush drums'], ['Lap steel swells', 'Electric bass groove'],
+        ['Harmonica fills', 'Front-porch acoustic rhythm'], ['Honky-tonk piano', 'Country shuffle drums'],
+        ['Acoustic guitar strum', 'Fiddle-and-bass groove'], ['Resonator guitar', 'Loose roots drum kit']
+      ],
+      'Jazz & Latin': [
+        ['Upright bass walking line', 'Brush jazz drums'], ['Nylon-string guitar', 'Latin percussion'],
+        ['Rhodes jazz chords', 'Ride-cymbal swing'], ['Muted trumpet lead', 'Upright bass pulse'],
+        ['Saxophone melody', 'Brush-and-snare kit'], ['Piano montuno', 'Congas and bongos'],
+        ['Hollow-body guitar', 'Jazz ride groove'], ['Vibraphone chords', 'Soft upright bass'],
+        ['Flugelhorn phrases', 'Brushes and rim clicks'], ['Organ jazz comping', 'Swinging walking bass'],
+        ['Marimba patterns', 'Clave-led percussion'], ['Piano ballad voicings', 'Light jazz drum kit']
+      ],
+      'Reggae & Global': [
+        ['Skanking electric guitar', 'One-drop drum groove'], ['Dub bassline', 'Off-beat guitar chops'],
+        ['Organ bubble chords', 'Deep reggae drums'], ['Nyabinghi hand percussion', 'Round bass guitar'],
+        ['Muted guitar skank', 'Dancehall kick-and-snare'], ['Melodic marimba', 'Afrobeat drum groove'],
+        ['Brass section stabs', 'Syncopated global percussion'], ['Palm-muted guitar', 'Dub echo bass'],
+        ['Kalimba patterns', 'Loose hand percussion'], ['Clean reggae guitar', 'Roots drum kit'],
+        ['Synth organ bubble', 'Dancehall percussion'], ['Highlife guitar lines', 'Cross-rhythmic drums']
+      ],
+      'Cinematic & Instrumental': [
+        ['Piano ostinato', 'Warm string ensemble'], ['Cello pulse', 'Soft piano motif'],
+        ['Brass swells', 'Low orchestral percussion'], ['Solo violin line', 'Deep cinematic drones'],
+        ['Plucked harp texture', 'String ostinato'], ['Woodwind ensemble', 'Timpani accents'],
+        ['Analog cinematic pad', 'Grand piano chords'], ['Low cello drones', 'Soft mallet percussion'],
+        ['Prepared piano texture', 'Sparse string harmonics'], ['Choir pad', 'Orchestral bass drum'],
+        ['Minimalist piano pattern', 'Muted string pulse'], ['Ambient synth bed', 'Subtle mallet motif']
+      ]
+    };
+
     // Fill in every dropdown genre that isn't a curated ARCHETYPE with a category-based fallback.
+    // Only the new `layerInstruments` metadata is used by the Lyric Studio layer cue; the
+    // original fallback `instruments` remain exactly as before for every other feature.
     (function buildFallbackProfiles(){
       const groups = document.querySelectorAll('#genreSelect optgroup');
       groups.forEach(group => {
-        const template = CATEGORY_TEMPLATES[group.getAttribute('label')];
-        if (!template) return;
         const category = group.getAttribute('label');
+        const template = CATEGORY_TEMPLATES[category];
+        if (!template) return;
+        const variants = FALLBACK_LAYER_VARIANTS[category] || [];
+        let variantIndex = 0;
         Array.from(group.querySelectorAll('option')).forEach(opt => {
           const name = (opt.value || opt.textContent || '').trim();
           if (!name || GENRE_PROFILES[name]) return; // curated archetypes stay untouched
+          const layerInstruments = variants.length
+            ? variants[variantIndex++ % variants.length].slice()
+            : template.instruments.slice(0, 2);
           GENRE_PROFILES[name] = {
             label: name,
             style: `${name}, ${category}`,
@@ -585,6 +688,7 @@
             vocalType: template.vocalType,
             vocals: template.vocals.slice(),
             instruments: template.instruments.slice(),
+            layerInstruments,
             production: template.production.slice(),
             rhythm: template.rhythm.slice(),
             topic: template.topic
@@ -962,13 +1066,16 @@
         : 'individual layers (drums, bass, harmonic elements) fade across independently rather than switching all at once';
     }
 
-    function getStyleCueDetails(style) {
+    function getStyleCueDetails(style, lyricStudioLayer = false) {
       const profile = getGenreProfile(style);
       if (!profile) return { style, tempo: '', instruments: [] };
+      const layerSource = lyricStudioLayer && profile.layerInstruments
+        ? profile.layerInstruments
+        : profile.instruments;
       return {
         style,
         tempo: profile.tempo || '',
-        instruments: (profile.instruments || []).slice(0, 2)
+        instruments: (layerSource || []).slice(0, 2)
       };
     }
 
@@ -1281,8 +1388,14 @@
       const primary = getSelectedPrimaryGenreName();
       const fused = getFuseSelectValues();
 
-      // Lyrics must always describe the base sound first. Dynamic Style Blending
-      // is an additional layer and must never replace the primary genre.
+      // Preserve the original no-blend behaviour: when there are no additional
+      // styles, lyrics do not need an extra STYLE cue. The primary genre is added
+      // only when there is actually a fused/timeline style that needs context.
+      if (!timelineMarkers.length && !fused.length) return timelineMarkers;
+
+      // Lyrics must describe the base sound first whenever additional styles are
+      // present. Dynamic Style Blending is an additional layer and must never
+      // replace the primary genre.
       const names = [];
       const seen = new Set();
       const add = (name) => {
@@ -1344,7 +1457,9 @@
       const stemDesc = getStemMorphDescriptor();
       const insertions = new Map();
       markers.forEach((m, i) => {
-        const cue = getStyleCueDetails(m.style);
+        // Lyric Studio only: use the genre-specific layer metadata for fallback genres.
+        // All other morph/prompt paths continue to use the original profile instruments.
+        const cue = getStyleCueDetails(m.style, true);
         const sectionIndex = Math.min(headingIndexes.length - 1, Math.floor(i * headingIndexes.length / markers.length));
         const at = headingIndexes[sectionIndex];
         const tempo = cue.tempo ? `\n[TEMPO: ${cue.tempo}]` : '';
