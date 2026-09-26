@@ -1263,23 +1263,26 @@
       $('lyricMetrics').textContent = `${lines} lines`;
     }
 
+    function getSelectedPrimaryGenreName() {
+      const select = $('genreSelect');
+      if (!select) return '';
+      // Use the visible option text as the canonical name. This is deliberately
+      // independent of any profile/fusion state so the primary genre can never be
+      // lost when the Fuse Styles or Dynamic Style Blending controls recompute.
+      const option = select.options && select.selectedIndex >= 0
+        ? select.options[select.selectedIndex]
+        : null;
+      const name = option ? String(option.textContent || option.value || '').trim() : '';
+      return name === 'Select a sound or genre' || name === 'Custom description...' ? '' : name;
+    }
+
     function getLyricStyleMarkers() {
       const timelineMarkers = getMorphData();
-      const primary = $('genreSelect') ? $('genreSelect').value : '';
+      const primary = getSelectedPrimaryGenreName();
       const fused = getFuseSelectValues();
 
-      // The dynamic timeline is an additional style layer, not a replacement for
-      // the primary/base genre. If the timeline contains styles, the lyric cues must
-      // therefore begin with the selected primary genre even when there are no
-      // .fuse-select controls in the Fuse Styles panel. This is the case shown by
-      // the UI when, for example, Synthwave is the base genre and Bedroom Pop is the
-      // first timeline marker.
-      if (!timelineMarkers.length && !fused.length) return timelineMarkers;
-
-      // Build an ordered lyric style list: primary/base genre first, then explicit
-      // Fuse Styles selections, then Dynamic Style Blending timeline styles.
-      // De-duplicate by normalized style name so a style already used elsewhere is
-      // not emitted twice.
+      // Lyrics must always describe the base sound first. Dynamic Style Blending
+      // is an additional layer and must never replace the primary genre.
       const names = [];
       const seen = new Set();
       const add = (name) => {
@@ -1291,13 +1294,12 @@
         }
       };
 
-      if (primary && primary !== 'custom') add(primary);
+      add(primary);
       fused.forEach(add);
       timelineMarkers.forEach(m => add(m.style));
 
       return names.map((style, i) => ({
-        // These are lyric/structural cue positions, not literal timeline seconds.
-        // Keep the primary genre first and let the remaining styles follow it.
+        // These are ordered lyric cues, not literal timeline seconds.
         time: i === 0 ? '0:00' : '',
         style,
         duration: 15,
@@ -1307,19 +1309,33 @@
 
     function applyMorphCuesToLyrics(baseLyrics) {
       if ($('morphMethod').value !== 'structural') return baseLyrics;
-      const timelineMarkers = getMorphData();
+
       const markers = getLyricStyleMarkers();
       if (!markers.length) return baseLyrics;
 
+      // Put the primary/base genre at the beginning of the ordered style list,
+      // regardless of what the first Dynamic Style Blending marker contains.
+      // This is intentionally generated from #genreSelect itself rather than from
+      // the fused profile, because fuseGenreProfiles() merges descriptors and can
+      // otherwise hide the identity of the base genre.
+      const primary = getSelectedPrimaryGenreName();
+      if (primary) {
+        const first = markers.findIndex(m => String(m.style).trim().toLowerCase() === primary.toLowerCase());
+        if (first > 0) {
+          const [base] = markers.splice(first, 1);
+          markers.unshift(base);
+        }
+      }
+
       // Put each style cue next to an actual lyric/arrangement section instead of
-      // dumping the whole timeline above the song. This gives single-generation
-      // models a local cue-to-content relationship. Timeline seconds remain UI
-      // planning data and are intentionally omitted from the generated text.
+      // dumping the whole timeline above the song. The first cue is therefore always
+      // the primary genre, followed by explicit Fuse Styles and then timeline styles.
       const lines = String(baseLyrics || '').split('\n');
       const headingIndexes = [];
       lines.forEach((line, i) => {
         if (/^\s*\[[^\]]+\]\s*$/.test(line)) headingIndexes.push(i);
       });
+
       if (!headingIndexes.length) {
         return `${buildStructuralCueBlock()}\n\n${baseLyrics}`;
       }
