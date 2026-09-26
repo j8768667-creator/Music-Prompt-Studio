@@ -2,13 +2,16 @@
 <html lang="en" class="dark">
 <head>
   <meta charset="UTF-8">
+  <!-- iPad Optimization: Prevent pinch-to-zoom and double-tap zoom -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <!-- iOS Home Screen App Capabilities -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   
   <title>PromptWeaver - Music Prompt Workbench</title>
   <meta name="description" content="Advanced workbench for crafting precision music AI prompts for Suno, Udio, MusicGen, StepAudio 3, and Flow Music.">
   
+  <!-- Tailwind CSS via CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -16,7 +19,11 @@
       theme: {
         extend: {
           colors: {
-            studio: { 950: '#0d0f12', 900: '#13171d', 850: '#181e26', 800: '#202732', 700: '#323c4d', 400: '#8b9bb4', 200: '#d5dde8', 100: '#f0f4f9' },
+            studio: {
+              950: '#0d0f12', 900: '#13171d', 850: '#181e26',
+              800: '#202732', 700: '#323c4d', 400: '#8b9bb4',
+              200: '#d5dde8', 100: '#f0f4f9'
+            },
             amber: { 450: '#F59E0B', 550: '#D97706' },
             teal: { 450: '#10B981', 550: '#059669' }
           },
@@ -29,8 +36,14 @@
     };
   </script>
   <style>
-    body { -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; }
-    button, select, input, .touch-target { touch-action: manipulation; }
+    /* iPad / Touch Specific Optimizations */
+    body {
+      -webkit-tap-highlight-color: transparent; 
+      -webkit-touch-callout: none; 
+    }
+    button, select, input, .touch-target {
+      touch-action: manipulation; 
+    }
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: #13171d; }
     ::-webkit-scrollbar-thumb { background: #323c4d; border-radius: 3px; }
@@ -40,14 +53,17 @@
   </style>
 </head>
 <body class="bg-studio-950 text-studio-100 min-h-screen font-sans selection:bg-amber-500/30 selection:text-amber-200 overscroll-none">
+  <!-- TOP BAR -->
   <header class="border-b border-studio-800 bg-studio-900/90 backdrop-blur sticky top-0 z-40">
     <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3 min-h-[60px]">
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-450 to-amber-600 flex items-center justify-center text-studio-950 font-bold text-lg shadow-sm shrink-0">PW</div>
+        <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-450 to-amber-600 flex items-center justify-center text-studio-950 font-bold text-lg shadow-sm shrink-0">
+          PW
+        </div>
         <div>
           <div class="flex items-center gap-2">
             <h1 class="text-base font-semibold tracking-tight text-white">PromptWeaver</h1>
-            <span class="text-xs px-2 py-0.5 rounded bg-studio-800 text-amber-400 font-mono">v2.6 Touch</span>
+            <span class="text-xs px-2 py-0.5 rounded bg-studio-800 text-amber-400 font-mono">v2.7 Touch</span>
           </div>
           <p class="text-xs text-studio-400">Precision Music Prompt &amp; Lyric Studio</p>
         </div>
@@ -68,7 +84,9 @@
     </div>
   </header>
 
+  <!-- MAIN WORKSPACE -->
   <main class="max-w-7xl mx-auto px-4 py-6">
+    <!-- PRESET ROW -->
     <div class="mb-6 flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none" style="-webkit-overflow-scrolling: touch;">
       <span class="text-xs font-semibold text-studio-400 uppercase tracking-wider shrink-0 mr-1">Presets:</span>
       <button class="preset-btn touch-target min-h-[36px] px-4 py-1.5 rounded-full bg-studio-900 border border-studio-800 active:border-amber-500 text-sm text-studio-200 whitespace-nowrap transition-colors" data-preset="synthwave-noir">Synthwave Noir</button>
@@ -85,7 +103,9 @@
       <button class="preset-btn touch-target min-h-[36px] px-4 py-1.5 rounded-full bg-studio-900 border border-studio-800 active:border-amber-500 text-sm text-studio-200 whitespace-nowrap transition-colors" data-preset="folk-dnb">Folk × D&amp;B</button>
     </div>
 
+    <!-- 2-COLUMN STUDIO GRID -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <!-- LEFT COLUMN -->
       <div class="lg:col-span-5 space-y-6">
         <div class="bg-studio-900 border border-studio-800 rounded-xl p-5 shadow-sm">
           <div class="flex items-center justify-between pb-3 border-b border-studio-800 mb-4">
@@ -150,6 +170,7 @@
                   <option value="average">Averaged Tempo + Duet Vocals</option>
                 </select>
               </div>
+              <p id="fuseHint" class="text-xs text-studio-500">Blend the Primary Genre above with one or more additional genres — merges their subgenre tags, mood, and instrumentation into one hybrid profile.</p>
             </div>
 
             <div id="morphWrap" class="p-3 rounded-lg border border-studio-800 bg-studio-950/50 space-y-3">
@@ -167,31 +188,47 @@
                 <div>
                   <label class="text-xs text-studio-500 block mb-1">Method</label>
                   <select id="morphMethod" class="touch-target w-full bg-studio-950 border border-studio-800 rounded px-2 py-2 text-sm text-studio-200">
-                    <option value="structural" selected>Structural Cues</option><option value="chain">Extension / Chain</option>
+                    <option value="structural" selected>Structural Cues</option>
+                    <option value="chain">Extension / Chain</option>
                   </select>
                 </div>
                 <div>
                   <label class="text-xs text-studio-500 block mb-1">Transition</label>
                   <select id="morphDuration" class="touch-target w-full bg-studio-950 border border-studio-800 rounded px-2 py-2 text-sm text-studio-200">
-                    <option value="8">8 sec</option><option value="15" selected>15 sec</option><option value="30">30 sec</option><option value="45">45 sec</option><option value="60">60 sec</option>
+                    <option value="8">8 sec</option>
+                    <option value="15" selected>15 sec</option>
+                    <option value="30">30 sec</option>
+                    <option value="45">45 sec</option>
+                    <option value="60">60 sec</option>
                   </select>
                 </div>
                 <div>
                   <label class="text-xs text-studio-500 block mb-1">Tempo Curve</label>
                   <select id="morphTempoCurve" class="touch-target w-full bg-studio-950 border border-studio-800 rounded px-2 py-2 text-sm text-studio-200">
-                    <option value="adaptive" selected>Adaptive</option><option value="linear">Linear</option><option value="bar-aligned">Bar-aligned</option>
+                    <option value="adaptive" selected>Adaptive</option>
+                    <option value="linear">Linear</option>
+                    <option value="bar-aligned">Bar-aligned</option>
                   </select>
                 </div>
                 <div>
                   <label class="text-xs text-studio-500 block mb-1">Stem Morph</label>
                   <select id="morphStems" class="touch-target w-full bg-studio-950 border border-studio-800 rounded px-2 py-2 text-sm text-studio-200">
-                    <option value="enabled" selected>Enabled</option><option value="disabled">Disabled</option>
+                    <option value="enabled" selected>Enabled</option>
+                    <option value="disabled">Disabled</option>
                   </select>
                 </div>
               </div>
               <div id="morphMarkers" class="space-y-2"></div>
+              <p id="morphHint" class="text-xs text-studio-500">Structural Cues places ordered section cues in the lyrics/structure box instead of confusing the main prompt.</p>
+              
+              <!-- Chain Panel (Restored Missing HTML Button to Prevent Crash) -->
               <div id="chainPanel" class="hidden space-y-2">
-                <textarea id="chainOutput" rows="4" readonly class="w-full bg-studio-950 border border-studio-800 rounded-lg p-3 text-xs font-mono text-studio-200 leading-relaxed outline-none resize-y"></textarea>
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-semibold text-studio-400 uppercase tracking-wider">Extension prompts</span>
+                  <button id="copyChainBtn" type="button" class="touch-target min-h-[32px] text-xs px-2.5 py-1 rounded-md bg-studio-800 hover:bg-studio-700 text-amber-400 font-medium transition-colors">Copy All Steps</button>
+                </div>
+                <textarea id="chainOutput" rows="8" readonly class="w-full bg-studio-950 border border-studio-800 rounded-lg p-3 text-xs font-mono text-studio-200 leading-relaxed outline-none resize-y" placeholder="Choose Extension / Chain and add at least two timeline styles..."></textarea>
+                <p class="text-xs text-studio-500">Generate the first section by itself. For each later section, use the previous audio with Continue/Extend and paste only that section's style prompt.</p>
               </div>
             </div>
 
@@ -247,6 +284,7 @@
               </div>
             </div>
 
+            <!-- Flow Settings -->
             <div id="flowSettings" class="hidden p-4 rounded-lg border border-studio-800 bg-studio-950 space-y-3">
               <div class="text-sm font-semibold text-amber-400 flex items-center justify-between">
                 <span>Flow Parameters</span>
@@ -299,6 +337,7 @@
           </div>
         </div>
 
+        <!-- Sound Traits Box -->
         <div class="bg-studio-900 border border-studio-800 rounded-xl p-5 shadow-sm">
           <div class="flex items-center justify-between pb-3 border-b border-studio-800 mb-3">
             <h2 class="text-base font-semibold text-white flex items-center gap-2">
@@ -320,6 +359,7 @@
         </div>
       </div>
 
+      <!-- RIGHT COLUMN -->
       <div class="lg:col-span-7 space-y-6">
         <div class="flex items-center gap-2 border-b border-studio-800 pb-2">
           <button id="tabPromptBtn" class="touch-target px-5 py-3 rounded-lg bg-studio-850 text-amber-400 font-semibold text-sm border border-amber-500/30 flex items-center gap-2">
@@ -351,6 +391,7 @@
                 <button class="metatag-btn touch-target px-3 py-1.5 rounded-lg bg-studio-950 border border-studio-800 active:border-amber-500 text-sm font-mono text-studio-300 transition-colors" data-meta="[Wide Stereo]">[Wide Stereo]</button>
                 <button class="metatag-btn touch-target px-3 py-1.5 rounded-lg bg-studio-950 border border-studio-800 active:border-amber-500 text-sm font-mono text-studio-300 transition-colors" data-meta="[Analog Warmth]">[Analog Warmth]</button>
                 <button class="metatag-btn touch-target px-3 py-1.5 rounded-lg bg-studio-950 border border-studio-800 active:border-amber-500 text-sm font-mono text-studio-300 transition-colors" data-meta="[Heavy Bass]">[Heavy Bass]</button>
+                <button class="metatag-btn touch-target px-3 py-1.5 rounded-lg bg-studio-950 border border-studio-800 active:border-amber-500 text-sm font-mono text-studio-300 transition-colors" data-meta="[Fade Out]">[Fade Out]</button>
               </div>
             </div>
             <div class="mt-4 pt-4 border-t border-studio-800">
@@ -378,8 +419,8 @@
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
-                <label for="topicInput" class="block text-sm font-medium text-studio-400 mb-1">Story Concept</label>
-                <input type="text" id="topicInput" placeholder="e.g. Midnight drive..." class="touch-target w-full bg-studio-950 border border-studio-800 focus:border-amber-500 rounded-lg px-4 py-2.5 text-base text-studio-100 outline-none">
+                <label for="topicInput" class="block text-sm font-medium text-studio-400 mb-1">Story Concept <span class="text-studio-500 text-xs font-normal">(noun phrase)</span></label>
+                <input type="text" id="topicInput" placeholder="e.g. a midnight drive, fading neon..." class="touch-target w-full bg-studio-950 border border-studio-800 focus:border-amber-500 rounded-lg px-4 py-2.5 text-base text-studio-100 outline-none">
               </div>
               <div>
                 <label for="structureSelect" class="block text-sm font-medium text-studio-400 mb-1">Architecture</label>
@@ -411,11 +452,12 @@
               <button class="insert-cue touch-target px-2.5 py-1 rounded bg-studio-800 hover:bg-studio-700 text-studio-300 font-mono text-xs transition-colors" data-cue="( )">( ) Harmonies</button>
               <button class="insert-cue touch-target px-2.5 py-1 rounded bg-studio-800 hover:bg-studio-700 text-studio-300 font-mono text-xs transition-colors" data-cue="ALL CAPS">ALL CAPS (Belt)</button>
               <button class="insert-cue touch-target px-2.5 py-1 rounded bg-studio-800 hover:bg-studio-700 text-studio-300 font-mono text-xs transition-colors" data-cue="wor-r-r-rd">- Stretch</button>
+              <button class="insert-cue touch-target px-2.5 py-1 rounded bg-studio-800 hover:bg-studio-700 text-studio-300 font-mono text-xs transition-colors" data-cue="...">... Pause</button>
               <button class="insert-cue touch-target px-2.5 py-1 rounded bg-studio-800 hover:bg-studio-700 text-studio-300 font-mono text-xs transition-colors" data-cue="[Verse: acoustic, whispered vocal]">[Local Style]</button>
               <button class="insert-cue touch-target px-2.5 py-1 rounded bg-studio-800 hover:bg-studio-700 text-studio-300 font-mono text-xs transition-colors" data-cue="[Chorus | Anthemic | Stacked Harmonies]">[Section | Tags]</button>
             </div>
             
-            <textarea id="lyricsOutput" rows="12" class="touch-target w-full bg-studio-950 border border-studio-800 focus:border-amber-500 rounded-lg p-4 text-base font-mono text-studio-100 leading-relaxed outline-none resize-y"></textarea>
+            <textarea id="lyricsOutput" rows="14" class="touch-target w-full bg-studio-950 border border-studio-800 focus:border-amber-500 rounded-lg p-4 text-base font-mono text-studio-100 leading-relaxed outline-none resize-y"></textarea>
             <div class="mt-4 pt-4 border-t border-studio-800 flex flex-wrap items-center justify-between gap-3">
               <label class="flex items-center gap-3 text-studio-300 cursor-pointer touch-target py-1 text-sm">
                 <input type="checkbox" id="includeCues" checked class="w-5 h-5 rounded border-studio-800 bg-studio-950 text-amber-500">
@@ -450,51 +492,400 @@
   (function(){
     'use strict';
     
+    // FULL DATA DICTIONARIES (UN-MINIFIED TO ENSURE COMPLETE LOADING)
     const ARCHETYPES = {
-      'Synthwave': { label: 'Synthwave', style: 'Synthwave, Darksynth, Outrun', mood: 'Nostalgic, Midnight, Neon', tempo: '118 BPM, F Minor', vocalType: 'male', vocals: ['Emotive falsetto lead', 'Reverb-gated vocal doubles'], instruments: ['Analog saw-wave synth lead', 'Gated snare drum', 'Pulsing arpeggiator bassline', 'LinnDrum'], production: ['80s gated reverb chamber', 'Analog tape saturation'], rhythm: ['Driving four-on-the-floor kick', '16th-note synth arpeggio pulse'], topic: 'Speeding through an empty neon city' },
-      'French House': { label: 'French House', style: 'French House, Nu-Disco', mood: 'Euphoric, Groovy, Luxurious', tempo: '124 BPM, D Minor', vocalType: 'vocoder', vocals: ['Vocoder robotic hooks', 'Talkbox harmonies'], instruments: ['Funky slap bass', 'Filtered vinyl sample loops', 'Analog synth brass'], production: ['Heavy sidechain compression pump', 'Resonant low-pass filter sweeps'], rhythm: ['Four-on-the-floor kick', 'Swung syncopated funk pocket'], topic: 'Glittering lights on a Parisian dancefloor' },
-      'Deep House': { label: 'Deep House', style: 'Deep House, Melodic Club', mood: 'Smooth, Hypnotic, Late-Night', tempo: '122 BPM, G Minor', vocalType: 'female', vocals: ['Breathy soulful lead', 'Soft pitched-down vocal chops'], instruments: ['Round subby M1 organ bass', 'Fender Rhodes electric piano', 'Crisp 909 percussion'], production: ['Sub-bass focus below 60Hz', 'Spacious club reverb'], rhythm: ['Gentle four-on-the-floor pulse', 'Swung 16th-note shaker groove'], topic: 'Floating through late-night ocean waves' },
-      'Melodic Techno': { label: 'Melodic Techno', style: 'Melodic Techno', mood: 'Hypnotic, Cinematic, Tense', tempo: '126 BPM, C Minor', vocalType: 'instrumental', vocals: ['Wordless ethereal vocal pad'], instruments: ['Rolling modular bass', 'Hypnotic pluck arpeggio', 'Massive reverb snare'], production: ['Long filter sweeps', 'Ultra-wide stereo panning'], rhythm: ['Relentless four-on-the-floor drive', 'Rolling bassline syncopation'], topic: 'A journey through deep interstellar frequencies' },
-      'Drum & Bass': { label: 'Drum & Bass', style: 'Liquid Drum & Bass, Jungle', mood: 'Energetic, Soaring, Futuristic', tempo: '174 BPM, F Minor', vocalType: 'female', vocals: ['Soulful high-register soprano', 'Pitched-up vocal chops'], instruments: ['Modulated Reese bass', 'Crisp chopped Amen breakbeat', 'Rhodes piano chords'], production: ['Sub-bass mono isolation', 'Fast stereo delay ping-pong'], rhythm: ['Lightning 174 BPM breakbeat pattern', 'Syncopated rolling snare shuffle'], topic: 'High-speed glide through digital horizons' },
-      'EDM Festival': { label: 'EDM Festival', style: 'Festival Progressive House', mood: 'Euphoric, Anthemic, Massive', tempo: '128 BPM, B Minor', vocalType: 'female', vocals: ['Anthemic soaring lead belting', 'Festival crowd choir'], instruments: ['Layered supersaw synth chords', 'Acoustic grand piano melody', 'Sub-frequency kick'], production: ['Extreme sidechain ducking', 'Massive stadium reverb wash'], rhythm: ['Pounding 128 BPM four-on-the-floor', 'Snare roll crescendo riser'], topic: 'Celebrating with ten thousand voices' },
-      'Ambient Chillwave': { label: 'Ambient Chillwave', style: 'Ambient, Chillwave, Downtempo', mood: 'Serene, Meditative, Weightless', tempo: '75 BPM, D Major', vocalType: 'instrumental', vocals: ['Soft wordless vocal breath'], instruments: ['Warm prophet synth pads', 'Clean delayed electric guitar arpeggios', 'Upright piano'], production: ['Infinite reverb decay tails', 'Binaural panning spatial field'], rhythm: ['Slow drifting ambient pulse', 'Unquantized brush percussion'], topic: 'Stillness at dawn on a quiet mountain ridge' },
-      'Melodic Trap': { label: 'Melodic Trap', style: 'Melodic Trap, R&B Rap', mood: 'Moody, Introspective, Heavy', tempo: '140 BPM, C# Minor', vocalType: 'male', vocals: ['Autotuned melodic sing-rap', 'Breathy falsetto ad-libs'], instruments: ['Deep sliding 808 sub bass', 'Minor key bell plucks', 'Fast rolling hi-hats'], production: ['Sub-bass soft clipping saturation', 'Dark low-pass filter on chords'], rhythm: ['Half-time snare on beat 3', 'Triplet 32nd-note hi-hat rolls'], topic: 'Reflecting on the climb and isolation' },
-      'Boom-Bap': { label: 'Boom-Bap', style: 'Boom-Bap, Jazz Rap', mood: 'Grounded, Gritty, Thoughtful', tempo: '90 BPM, Bb Minor', vocalType: 'male', vocals: ['Crisp articulate delivery', 'Soulful sampled hook'], instruments: ['Dusty upright bassline', 'Warm jazz guitar loop', 'Punchy acoustic kick and snare'], production: ['SP-1200 12-bit sampler crunch', 'Warm vinyl crackle and hiss'], rhythm: ['Swung unquantized head-nod rhythm', 'Laid-back pocket'], topic: 'Chronicles of city life and staying genuine' },
-      'Lo-Fi Hip-Hop': { label: 'Lo-Fi Hip-Hop', style: 'Lo-Fi Hip Hop, Chillhop', mood: 'Cozy, Nostalgic, Relaxed', tempo: '82 BPM, Eb Major', vocalType: 'instrumental', vocals: ['None - instrumental focus'], instruments: ['Detuned Rhodes electric piano', 'Felt upright piano', 'Muted electric bass'], production: ['Cassette tape wow and flutter', 'Low-pass filter at 8kHz', 'Vinyl surface dust'], rhythm: ['Drunk lazy swung drum groove', 'Gentle muted kick drum'], topic: 'Rain falling gently against the library window' },
-      'Contemporary Pop': { label: 'Contemporary Pop', style: 'Pop, Dance-Pop', mood: 'Catchy, Polished, Upbeat', tempo: '120 BPM, C Major', vocalType: 'female', vocals: ['Crystal clear lead vocal', 'Stacked radio pop harmonies'], instruments: ['Bright polysynth chords', 'Live bass guitar with synth layer', 'Modern hybrid drums'], production: ['Glossy high-end sparkle', 'Multiband radio-ready master'], rhythm: ['Driving four-on-the-floor pop pulse', 'Clap-stacked snare'], topic: 'Letting go of doubt and living fearlessly' },
-      'Alternative R&B': { label: 'Alternative R&B', style: 'Alternative R&B, Dark Soul', mood: 'Seductive, Moody, Intimate', tempo: '88 BPM, F# Minor', vocalType: 'female', vocals: ['Silky multi-octave range', 'Breathy intimate falsetto runs'], instruments: ['Warm electric piano with tremolo', 'Deep subby 808 bass', 'Atmospheric guitar swells'], production: ['Lush plate reverb space', 'Warm low-end saturation'], rhythm: ['Slow sensual half-time groove', 'Syncopated neo-soul hi-hats'], topic: 'Late-night confessions and undeniable attraction' },
-      'Neo-Soul': { label: 'Neo-Soul', style: 'Neo-Soul, Soul, Jazz-Funk', mood: 'Warm, Organic, Earthy', tempo: '86 BPM, E Minor', vocalType: 'female', vocals: ['Rich chest voice belt', 'Gospel-trained layered harmonies'], instruments: ['Vintage Rhodes Mark I', 'Groovy fingerstyle electric bass', 'Warm live drum kit'], production: ['Natural room tone acoustics', 'Analog tube warmth'], rhythm: ['Behind-the-beat pocket', 'Swung unquantized live drumming'], topic: 'Healing, self-love, and rhythm of life' },
-      'Alternative Rock': { label: 'Alternative Rock', style: 'Grunge, 90s Alternative Rock', mood: 'Raw, Angsty, Cathartic', tempo: '116 BPM, E Minor', vocalType: 'belting', vocals: ['Raspy strained lead vocal', 'Cracked emotional falsetto'], instruments: ['Distorted heavy guitars', 'Pounding acoustic drum kit', 'Overdriven melodic bass'], production: ['Quiet-to-loud dynamic contrasts', 'Vintage tape console grit'], rhythm: ['Heavy backbeat rock groove', 'Hard-hitting crash cymbals'], topic: 'Breaking through inner turmoil' },
-      'Modern Metalcore': { label: 'Modern Metalcore', style: 'Metalcore, Djent', mood: 'Aggressive, Massive, Cathartic', tempo: '150 BPM, Drop D', vocalType: 'belting', vocals: ['Guttural aggressive screams', 'Soaring anthemic clean melodic chorus'], instruments: ['Down-tuned 7-string palm-muted guitars', 'Thunderous double-kick drum blasts', 'Sub-frequency bass drops'], production: ['Ultra-tight gate on rhythm guitars', 'Massive low-end impact'], rhythm: ['Syncopated polyrhythmic djent riffs', 'Crushing half-time breakdown'], topic: 'Rising from ashes when everything was meant to break you' },
-      'Cinematic Hybrid': { label: 'Cinematic Hybrid', style: 'Cinematic Orchestral, Hybrid Trailer Score', mood: 'Epic, Heroic, Tense', tempo: '90 BPM, D Minor', vocalType: 'instrumental', vocals: ['Wordless Gregorian choir chant'], instruments: ['80-piece symphony string section', 'Massive Japanese taiko drums', 'Synthetic sub-bass braams'], production: ['Giant abbey scoring stage space', 'Wide panoramic stereo imaging'], rhythm: ['Building 12/8 ostinato rhythm', 'Monumental downbeat impacts'], topic: 'An epic clash of civilizations across an ancient frontier' },
-      'Minimalism': { label: 'Minimalism', style: 'Neoclassical, Modern Minimalism', mood: 'Poignant, Meditative, Elegant', tempo: '72 BPM, A Minor', vocalType: 'instrumental', vocals: ['None - instrumental focus'], instruments: ['Concert grand piano with felt', 'Solo cello ostinato', 'Muted violin quartet'], production: ['Close-mic mechanical piano pedal noises', 'Warm wooden room decay'], rhythm: ['Repetitive hypnotic piano arpeggio', 'Rubato expressive phrasing'], topic: 'A single candle burning in a quiet stone chapel' },
-      'Deep Focus Flow': { label: 'Deep Focus Flow', style: 'Binaural Focus, Ambient Drone, Deep Flow', mood: 'Ultra-Focused, Tranquil, Infinite', tempo: '60 BPM, C Major', vocalType: 'instrumental', vocals: ['None - distraction-free focus'], instruments: ['Warm analog drone pad', 'Gentle singing bowl resonance', 'Subtle 10Hz binaural alpha pulse'], production: ['432 Hz warm concert pitch tuning', 'Zero sudden transients', 'Infinite seamless loop'], rhythm: ['Steady 60 BPM human resting pulse', 'Continuous smooth ambient drift'], topic: 'Entering pure uninterrupted deep work and laser focus' }
+      'Synthwave': { 
+        label: 'Synthwave', 
+        style: 'Synthwave, Darksynth, Outrun', 
+        mood: 'Nostalgic, Midnight, Neon', 
+        tempo: '118 BPM, F Minor', 
+        vocalType: 'male', 
+        vocals: ['Emotive falsetto lead', 'Reverb-gated vocal doubles'], 
+        instruments: ['Analog saw-wave synth lead', 'Gated snare drum', 'Pulsing arpeggiator bassline', 'LinnDrum'], 
+        production: ['80s gated reverb chamber', 'Analog tape saturation'], 
+        rhythm: ['Driving four-on-the-floor kick', '16th-note synth arpeggio pulse'], 
+        topic: 'Speeding through an empty neon city' 
+      },
+      'French House': { 
+        label: 'French House', 
+        style: 'French House, Nu-Disco', 
+        mood: 'Euphoric, Groovy, Luxurious', 
+        tempo: '124 BPM, D Minor', 
+        vocalType: 'vocoder', 
+        vocals: ['Vocoder robotic hooks', 'Talkbox harmonies'], 
+        instruments: ['Funky slap bass', 'Filtered vinyl sample loops', 'Analog synth brass'], 
+        production: ['Heavy sidechain compression pump', 'Resonant low-pass filter sweeps'], 
+        rhythm: ['Four-on-the-floor kick', 'Swung syncopated funk pocket'], 
+        topic: 'Glittering lights on a Parisian dancefloor' 
+      },
+      'Deep House': { 
+        label: 'Deep House', 
+        style: 'Deep House, Melodic Club', 
+        mood: 'Smooth, Hypnotic, Late-Night', 
+        tempo: '122 BPM, G Minor', 
+        vocalType: 'female', 
+        vocals: ['Breathy soulful lead', 'Soft pitched-down vocal chops'], 
+        instruments: ['Round subby M1 organ bass', 'Fender Rhodes electric piano', 'Crisp 909 percussion'], 
+        production: ['Sub-bass focus below 60Hz', 'Spacious club reverb'], 
+        rhythm: ['Gentle four-on-the-floor pulse', 'Swung 16th-note shaker groove'], 
+        topic: 'Floating through late-night ocean waves' 
+      },
+      'Melodic Techno': { 
+        label: 'Melodic Techno', 
+        style: 'Melodic Techno', 
+        mood: 'Hypnotic, Cinematic, Tense', 
+        tempo: '126 BPM, C Minor', 
+        vocalType: 'instrumental', 
+        vocals: ['Wordless ethereal vocal pad'], 
+        instruments: ['Rolling modular bass', 'Hypnotic pluck arpeggio', 'Massive reverb snare'], 
+        production: ['Long filter sweeps', 'Ultra-wide stereo panning'], 
+        rhythm: ['Relentless four-on-the-floor drive', 'Rolling bassline syncopation'], 
+        topic: 'A journey through deep interstellar frequencies' 
+      },
+      'Drum & Bass': { 
+        label: 'Drum & Bass', 
+        style: 'Liquid Drum & Bass, Jungle', 
+        mood: 'Energetic, Soaring, Futuristic', 
+        tempo: '174 BPM, F Minor', 
+        vocalType: 'female', 
+        vocals: ['Soulful high-register soprano', 'Pitched-up vocal chops'], 
+        instruments: ['Modulated Reese bass', 'Crisp chopped Amen breakbeat', 'Rhodes piano chords'], 
+        production: ['Sub-bass mono isolation', 'Fast stereo delay ping-pong'], 
+        rhythm: ['Lightning 174 BPM breakbeat pattern', 'Syncopated rolling snare shuffle'], 
+        topic: 'High-speed glide through digital horizons' 
+      },
+      'EDM Festival': { 
+        label: 'EDM Festival', 
+        style: 'Festival Progressive House', 
+        mood: 'Euphoric, Anthemic, Massive', 
+        tempo: '128 BPM, B Minor', 
+        vocalType: 'female', 
+        vocals: ['Anthemic soaring lead belting', 'Festival crowd choir'], 
+        instruments: ['Layered supersaw synth chords', 'Acoustic grand piano melody', 'Sub-frequency kick'], 
+        production: ['Extreme sidechain ducking', 'Massive stadium reverb wash'], 
+        rhythm: ['Pounding 128 BPM four-on-the-floor', 'Snare roll crescendo riser'], 
+        topic: 'Celebrating with ten thousand voices' 
+      },
+      'Ambient Chillwave': { 
+        label: 'Ambient Chillwave', 
+        style: 'Ambient, Chillwave, Downtempo', 
+        mood: 'Serene, Meditative, Weightless', 
+        tempo: '75 BPM, D Major', 
+        vocalType: 'instrumental', 
+        vocals: ['Soft wordless vocal breath'], 
+        instruments: ['Warm prophet synth pads', 'Clean delayed electric guitar arpeggios', 'Upright piano'], 
+        production: ['Infinite reverb decay tails', 'Binaural panning spatial field'], 
+        rhythm: ['Slow drifting ambient pulse', 'Unquantized brush percussion'], 
+        topic: 'Stillness at dawn on a quiet mountain ridge' 
+      },
+      'Melodic Trap': { 
+        label: 'Melodic Trap', 
+        style: 'Melodic Trap, R&B Rap', 
+        mood: 'Moody, Introspective, Heavy', 
+        tempo: '140 BPM, C# Minor', 
+        vocalType: 'male', 
+        vocals: ['Autotuned melodic sing-rap', 'Breathy falsetto ad-libs'], 
+        instruments: ['Deep sliding 808 sub bass', 'Minor key bell plucks', 'Fast rolling hi-hats'], 
+        production: ['Sub-bass soft clipping saturation', 'Dark low-pass filter on chords'], 
+        rhythm: ['Half-time snare on beat 3', 'Triplet 32nd-note hi-hat rolls'], 
+        topic: 'Reflecting on the climb and isolation' 
+      },
+      'Boom-Bap': { 
+        label: 'Boom-Bap', 
+        style: 'Boom-Bap, Jazz Rap', 
+        mood: 'Grounded, Gritty, Thoughtful', 
+        tempo: '90 BPM, Bb Minor', 
+        vocalType: 'male', 
+        vocals: ['Crisp articulate delivery', 'Soulful sampled hook'], 
+        instruments: ['Dusty upright bassline', 'Warm jazz guitar loop', 'Punchy acoustic kick and snare'], 
+        production: ['SP-1200 12-bit sampler crunch', 'Warm vinyl crackle and hiss'], 
+        rhythm: ['Swung unquantized head-nod rhythm', 'Laid-back pocket'], 
+        topic: 'Chronicles of city life and staying genuine' 
+      },
+      'Lo-Fi Hip-Hop': { 
+        label: 'Lo-Fi Hip-Hop', 
+        style: 'Lo-Fi Hip Hop, Chillhop', 
+        mood: 'Cozy, Nostalgic, Relaxed', 
+        tempo: '82 BPM, Eb Major', 
+        vocalType: 'instrumental', 
+        vocals: ['None - instrumental focus'], 
+        instruments: ['Detuned Rhodes electric piano', 'Felt upright piano', 'Muted electric bass'], 
+        production: ['Cassette tape wow and flutter', 'Low-pass filter at 8kHz', 'Vinyl surface dust'], 
+        rhythm: ['Drunk lazy swung drum groove', 'Gentle muted kick drum'], 
+        topic: 'Rain falling gently against the library window' 
+      },
+      'Contemporary Pop': { 
+        label: 'Contemporary Pop', 
+        style: 'Pop, Dance-Pop', 
+        mood: 'Catchy, Polished, Upbeat', 
+        tempo: '120 BPM, C Major', 
+        vocalType: 'female', 
+        vocals: ['Crystal clear lead vocal', 'Stacked radio pop harmonies'], 
+        instruments: ['Bright polysynth chords', 'Live bass guitar with synth layer', 'Modern hybrid drums'], 
+        production: ['Glossy high-end sparkle', 'Multiband radio-ready master'], 
+        rhythm: ['Driving four-on-the-floor pop pulse', 'Clap-stacked snare'], 
+        topic: 'Letting go of doubt and living fearlessly' 
+      },
+      'Alternative R&B': { 
+        label: 'Alternative R&B', 
+        style: 'Alternative R&B, Dark Soul', 
+        mood: 'Seductive, Moody, Intimate', 
+        tempo: '88 BPM, F# Minor', 
+        vocalType: 'female', 
+        vocals: ['Silky multi-octave range', 'Breathy intimate falsetto runs'], 
+        instruments: ['Warm electric piano with tremolo', 'Deep subby 808 bass', 'Atmospheric guitar swells'], 
+        production: ['Lush plate reverb space', 'Warm low-end saturation'], 
+        rhythm: ['Slow sensual half-time groove', 'Syncopated neo-soul hi-hats'], 
+        topic: 'Late-night confessions and undeniable attraction' 
+      },
+      'Neo-Soul': { 
+        label: 'Neo-Soul', 
+        style: 'Neo-Soul, Soul, Jazz-Funk', 
+        mood: 'Warm, Organic, Earthy', 
+        tempo: '86 BPM, E Minor', 
+        vocalType: 'female', 
+        vocals: ['Rich chest voice belt', 'Gospel-trained layered harmonies'], 
+        instruments: ['Vintage Rhodes Mark I', 'Groovy fingerstyle electric bass', 'Warm live drum kit'], 
+        production: ['Natural room tone acoustics', 'Analog tube warmth'], 
+        rhythm: ['Behind-the-beat pocket', 'Swung unquantized live drumming'], 
+        topic: 'Healing, self-love, and rhythm of life' 
+      },
+      'Alternative Rock': { 
+        label: 'Alternative Rock', 
+        style: 'Grunge, 90s Alternative Rock', 
+        mood: 'Raw, Angsty, Cathartic', 
+        tempo: '116 BPM, E Minor', 
+        vocalType: 'belting', 
+        vocals: ['Raspy strained lead vocal', 'Cracked emotional falsetto'], 
+        instruments: ['Distorted heavy guitars', 'Pounding acoustic drum kit', 'Overdriven melodic bass'], 
+        production: ['Quiet-to-loud dynamic contrasts', 'Vintage tape console grit'], 
+        rhythm: ['Heavy backbeat rock groove', 'Hard-hitting crash cymbals'], 
+        topic: 'Breaking through inner turmoil' 
+      },
+      'Modern Metalcore': { 
+        label: 'Modern Metalcore', 
+        style: 'Metalcore, Djent', 
+        mood: 'Aggressive, Massive, Cathartic', 
+        tempo: '150 BPM, Drop D', 
+        vocalType: 'belting', 
+        vocals: ['Guttural aggressive screams', 'Soaring anthemic clean melodic chorus'], 
+        instruments: ['Down-tuned 7-string palm-muted guitars', 'Thunderous double-kick drum blasts', 'Sub-frequency bass drops'], 
+        production: ['Ultra-tight gate on rhythm guitars', 'Massive low-end impact'], 
+        rhythm: ['Syncopated polyrhythmic djent riffs', 'Crushing half-time breakdown'], 
+        topic: 'Rising from ashes when everything was meant to break you' 
+      },
+      'Cinematic Hybrid': { 
+        label: 'Cinematic Hybrid', 
+        style: 'Cinematic Orchestral, Hybrid Trailer Score', 
+        mood: 'Epic, Heroic, Tense', 
+        tempo: '90 BPM, D Minor', 
+        vocalType: 'instrumental', 
+        vocals: ['Wordless Gregorian choir chant'], 
+        instruments: ['80-piece symphony string section', 'Massive Japanese taiko drums', 'Synthetic sub-bass braams'], 
+        production: ['Giant abbey scoring stage space', 'Wide panoramic stereo imaging'], 
+        rhythm: ['Building 12/8 ostinato rhythm', 'Monumental downbeat impacts'], 
+        topic: 'An epic clash of civilizations across an ancient frontier' 
+      },
+      'Minimalism': { 
+        label: 'Minimalism', 
+        style: 'Neoclassical, Modern Minimalism', 
+        mood: 'Poignant, Meditative, Elegant', 
+        tempo: '72 BPM, A Minor', 
+        vocalType: 'instrumental', 
+        vocals: ['None - instrumental focus'], 
+        instruments: ['Concert grand piano with felt', 'Solo cello ostinato', 'Muted violin quartet'], 
+        production: ['Close-mic mechanical piano pedal noises', 'Warm wooden room decay'], 
+        rhythm: ['Repetitive hypnotic piano arpeggio', 'Rubato expressive phrasing'], 
+        topic: 'A single candle burning in a quiet stone chapel' 
+      },
+      'Deep Focus Flow': { 
+        label: 'Deep Focus Flow', 
+        style: 'Binaural Focus, Ambient Drone, Deep Flow', 
+        mood: 'Ultra-Focused, Tranquil, Infinite', 
+        tempo: '60 BPM, C Major', 
+        vocalType: 'instrumental', 
+        vocals: ['None - distraction-free focus'], 
+        instruments: ['Warm analog drone pad', 'Gentle singing bowl resonance', 'Subtle 10Hz binaural alpha pulse'], 
+        production: ['432 Hz warm concert pitch tuning', 'Zero sudden transients', 'Infinite seamless loop'], 
+        rhythm: ['Steady 60 BPM human resting pulse', 'Continuous smooth ambient drift'], 
+        topic: 'Entering pure uninterrupted deep work and laser focus' 
+      }
     };
     
     const CATEGORY_TEMPLATES = {
-      'Pop & Contemporary': { mood: 'Catchy, Polished, Upbeat', tempo: '118 BPM, C Major', vocalType: 'female', vocals: ['Crystal clear lead vocal', 'Stacked pop harmonies', 'Airy ad-lib layers'], instruments: ['Bright synth chords', 'Punchy pop bassline', 'Modern hybrid drum kit'], production: ['Glossy radio-ready master', 'Sparkling high-end sheen'], rhythm: ['Driving pop pulse', 'Clap-stacked snare backbeat'], topic: 'Chasing a feeling that will not let go' },
-      'R&B, Soul & Funk': { mood: 'Smooth, Soulful, Groovy', tempo: '92 BPM, F Minor', vocalType: 'female', vocals: ['Rich soulful lead vocal', 'Gospel-trained harmony stack'], instruments: ['Warm electric piano', 'Groovy fingerstyle bass', 'Live funky drum kit'], production: ['Warm analog saturation', 'Natural room reverb'], rhythm: ['Behind-the-beat pocket groove', 'Syncopated funk hi-hats'], topic: 'Love, longing, and finding your rhythm' },
-      'Hip-Hop & Rap': { mood: 'Confident, Gritty, Rhythmic', tempo: '95 BPM, C Minor', vocalType: 'male', vocals: ['Confident rhythmic delivery', 'Ad-lib hype vocal stack'], instruments: ['Deep 808 sub bass', 'Rolling hi-hats', 'Sampled loop or keys'], production: ['Punchy low-end mix', 'Tight dry vocal chain'], rhythm: ['Syncopated trap-influenced groove', 'Head-nod boom-bap pocket'], topic: 'Grinding for respect and staying true to the come-up' },
-      'Electronic & Dance': { mood: 'Energetic, Hypnotic, Euphoric', tempo: '124 BPM, A Minor', vocalType: 'instrumental', vocals: ['Wordless vocal chop hook', 'Processed vocoder phrase'], instruments: ['Pulsing synth bassline', 'Layered synth arpeggio', 'Crisp electronic percussion'], production: ['Sidechain-pumped mix', 'Wide stereo synth field'], rhythm: ['Four-on-the-floor drive', 'Rolling 16th-note synth pulse'], topic: 'Losing yourself on the dancefloor as the lights blur' },
-      'Rock & Alternative': { mood: 'Raw, Energetic, Cathartic', tempo: '128 BPM, E Minor', vocalType: 'belting', vocals: ['Raw belting lead vocal', 'Gang-vocal group shout'], instruments: ['Distorted electric guitars', 'Driving bass guitar', 'Live acoustic drum kit'], production: ['Punchy guitar-forward mix', 'Room-mic drum ambience'], rhythm: ['Hard-driving rock backbeat', 'Crash-heavy chorus lift'], topic: 'Breaking free and refusing to be held down' },
-      'Metal': { mood: 'Aggressive, Intense, Powerful', tempo: '150 BPM, Drop D', vocalType: 'belting', vocals: ['Aggressive screamed verses', 'Soaring melodic chorus'], instruments: ['Down-tuned distorted guitars', 'Double-kick drum blasts', 'Heavy palm-muted riffs'], production: ['Tight high-gain guitar tone', 'Massive low-end impact'], rhythm: ['Syncopated breakdown riffing', 'Relentless double-kick pattern'], topic: 'Rising up through pain and refusing to break' },
-      'Country, Folk & Roots': { mood: 'Heartfelt, Earthy, Nostalgic', tempo: '96 BPM, G Major', vocalType: 'male', vocals: ['Warm heartfelt lead vocal', 'Close harmony duet'], instruments: ['Acoustic guitar strumming', 'Pedal steel guitar', 'Upright bass and brushed drums'], production: ['Warm natural room sound', 'Light analog tape warmth'], rhythm: ['Easy rolling backbeat', 'Front-porch acoustic groove'], topic: 'Small towns, long roads, and the people who matter' },
-      'Jazz & Latin': { mood: 'Sultry, Sophisticated, Warm', tempo: '104 BPM, D Minor', vocalType: 'female', vocals: ['Sultry jazz-inflected lead', 'Call-and-response harmony'], instruments: ['Warm upright bass', 'Brushed jazz drum kit', 'Nylon-string or piano comping'], production: ['Warm intimate room mic', 'Natural dynamic mix'], rhythm: ['Swung syncopated groove', 'Latin clave-inspired pulse'], topic: 'A slow dance under warm evening light' },
-      'Reggae & Global': { mood: 'Relaxed, Uplifting, Communal', tempo: '82 BPM, A Major', vocalType: 'male', vocals: ['Laid-back melodic lead', 'Call-and-response chorus'], instruments: ['Skanking off-beat guitar', 'Round dub bassline', 'Loose one-drop drum groove'], production: ['Deep dub-style reverb and delay', 'Warm analog low-end'], rhythm: ['Classic one-drop reggae rhythm', 'Off-beat guitar skank'], topic: 'Unity, sunshine, and rising above hard times' },
-      'Cinematic & Instrumental': { mood: 'Epic, Emotive, Atmospheric', tempo: '80 BPM, D Minor', vocalType: 'instrumental', vocals: ['None - instrumental focus'], instruments: ['Sweeping string section', 'Grand piano motif', 'Deep cinematic sub-bass'], production: ['Wide orchestral stereo image', 'Spacious hall reverb'], rhythm: ['Building orchestral ostinato', 'Slow expressive rubato'], topic: 'A sweeping journey across vast, unknown terrain' }
+      'Pop & Contemporary': { 
+        mood: 'Catchy, Polished, Upbeat', tempo: '118 BPM, C Major', vocalType: 'female', 
+        vocals: ['Crystal clear lead vocal', 'Stacked pop harmonies', 'Airy ad-lib layers'], 
+        instruments: ['Bright synth chords', 'Punchy pop bassline', 'Modern hybrid drum kit'], 
+        production: ['Glossy radio-ready master', 'Sparkling high-end sheen'], 
+        rhythm: ['Driving pop pulse', 'Clap-stacked snare backbeat'], 
+        topic: 'Chasing a feeling that will not let go' 
+      },
+      'R&B, Soul & Funk': { 
+        mood: 'Smooth, Soulful, Groovy', tempo: '92 BPM, F Minor', vocalType: 'female', 
+        vocals: ['Rich soulful lead vocal', 'Gospel-trained harmony stack'], 
+        instruments: ['Warm electric piano', 'Groovy fingerstyle bass', 'Live funky drum kit'], 
+        production: ['Warm analog saturation', 'Natural room reverb'], 
+        rhythm: ['Behind-the-beat pocket groove', 'Syncopated funk hi-hats'], 
+        topic: 'Love, longing, and finding your rhythm' 
+      },
+      'Hip-Hop & Rap': { 
+        mood: 'Confident, Gritty, Rhythmic', tempo: '95 BPM, C Minor', vocalType: 'male', 
+        vocals: ['Confident rhythmic delivery', 'Ad-lib hype vocal stack'], 
+        instruments: ['Deep 808 sub bass', 'Rolling hi-hats', 'Sampled loop or keys'], 
+        production: ['Punchy low-end mix', 'Tight dry vocal chain'], 
+        rhythm: ['Syncopated trap-influenced groove', 'Head-nod boom-bap pocket'], 
+        topic: 'Grinding for respect and staying true to the come-up' 
+      },
+      'Electronic & Dance': { 
+        mood: 'Energetic, Hypnotic, Euphoric', tempo: '124 BPM, A Minor', vocalType: 'instrumental', 
+        vocals: ['Wordless vocal chop hook', 'Processed vocoder phrase'], 
+        instruments: ['Pulsing synth bassline', 'Layered synth arpeggio', 'Crisp electronic percussion'], 
+        production: ['Sidechain-pumped mix', 'Wide stereo synth field'], 
+        rhythm: ['Four-on-the-floor drive', 'Rolling 16th-note synth pulse'], 
+        topic: 'Losing yourself on the dancefloor as the lights blur' 
+      },
+      'Rock & Alternative': { 
+        mood: 'Raw, Energetic, Cathartic', tempo: '128 BPM, E Minor', vocalType: 'belting', 
+        vocals: ['Raw belting lead vocal', 'Gang-vocal group shout'], 
+        instruments: ['Distorted electric guitars', 'Driving bass guitar', 'Live acoustic drum kit'], 
+        production: ['Punchy guitar-forward mix', 'Room-mic drum ambience'], 
+        rhythm: ['Hard-driving rock backbeat', 'Crash-heavy chorus lift'], 
+        topic: 'Breaking free and refusing to be held down' 
+      },
+      'Metal': { 
+        mood: 'Aggressive, Intense, Powerful', tempo: '150 BPM, Drop D', vocalType: 'belting', 
+        vocals: ['Aggressive screamed verses', 'Soaring melodic chorus'], 
+        instruments: ['Down-tuned distorted guitars', 'Double-kick drum blasts', 'Heavy palm-muted riffs'], 
+        production: ['Tight high-gain guitar tone', 'Massive low-end impact'], 
+        rhythm: ['Syncopated breakdown riffing', 'Relentless double-kick pattern'], 
+        topic: 'Rising up through pain and refusing to break' 
+      },
+      'Country, Folk & Roots': { 
+        mood: 'Heartfelt, Earthy, Nostalgic', tempo: '96 BPM, G Major', vocalType: 'male', 
+        vocals: ['Warm heartfelt lead vocal', 'Close harmony duet'], 
+        instruments: ['Acoustic guitar strumming', 'Pedal steel guitar', 'Upright bass and brushed drums'], 
+        production: ['Warm natural room sound', 'Light analog tape warmth'], 
+        rhythm: ['Easy rolling backbeat', 'Front-porch acoustic groove'], 
+        topic: 'Small towns, long roads, and the people who matter' 
+      },
+      'Jazz & Latin': { 
+        mood: 'Sultry, Sophisticated, Warm', tempo: '104 BPM, D Minor', vocalType: 'female', 
+        vocals: ['Sultry jazz-inflected lead', 'Call-and-response harmony'], 
+        instruments: ['Warm upright bass', 'Brushed jazz drum kit', 'Nylon-string or piano comping'], 
+        production: ['Warm intimate room mic', 'Natural dynamic mix'], 
+        rhythm: ['Swung syncopated groove', 'Latin clave-inspired pulse'], 
+        topic: 'A slow dance under warm evening light' 
+      },
+      'Reggae & Global': { 
+        mood: 'Relaxed, Uplifting, Communal', tempo: '82 BPM, A Major', vocalType: 'male', 
+        vocals: ['Laid-back melodic lead', 'Call-and-response chorus'], 
+        instruments: ['Skanking off-beat guitar', 'Round dub bassline', 'Loose one-drop drum groove'], 
+        production: ['Deep dub-style reverb and delay', 'Warm analog low-end'], 
+        rhythm: ['Classic one-drop reggae rhythm', 'Off-beat guitar skank'], 
+        topic: 'Unity, sunshine, and rising above hard times' 
+      },
+      'Cinematic & Instrumental': { 
+        mood: 'Epic, Emotive, Atmospheric', tempo: '80 BPM, D Minor', vocalType: 'instrumental', 
+        vocals: ['None - instrumental focus'], 
+        instruments: ['Sweeping string section', 'Grand piano motif', 'Deep cinematic sub-bass'], 
+        production: ['Wide orchestral stereo image', 'Spacious hall reverb'], 
+        rhythm: ['Building orchestral ostinato', 'Slow expressive rubato'], 
+        topic: 'A sweeping journey across vast, unknown terrain' 
+      }
     };
 
     const FALLBACK_LAYER_VARIANTS = {
-      'Pop & Contemporary': [ ['Bright synth plucks', 'Tight electronic drums'], ['Airy pad chords', 'Punchy pop bass'], ['Glossy piano stabs', 'Crisp programmed percussion'], ['Muted rhythm guitar', 'Warm synth bass'], ['Bell-like keys', 'Snappy clap and kick groove'], ['Dreamy polysynths', 'Soft electronic percussion'], ['Acoustic piano accents', 'Deep modern pop bass'], ['Shimmering arpeggiator', 'Dry punchy drums'], ['Vocal-chop synth hook', 'Round sub bass'], ['Clean electric guitar', 'Bright drum-machine groove'], ['Analog synth strings', 'Tight pop kick and snare'], ['Plucked digital keys', 'Bouncy synth bass'], ['Wide chorus guitar', 'Layered electronic drums'], ['Soft felt piano', 'Subtle synth pulse'] ],
-      'R&B, Soul & Funk': [ ['Rhodes electric piano', 'Round fingerstyle bass'], ['Clavinet funk stabs', 'Dry pocket drums'], ['Wurlitzer chords', 'Muted electric bass'], ['Hammond organ swells', 'Ghost-note drum groove'], ['Warm synth keys', 'Deep soul bass'], ['Clean guitar comping', 'Loose funk drums'], ['Moody electric piano', 'Subby bass groove'], ['Talkbox-style synth lead', 'Tight disco-funk drums'], ['Vintage string pad', 'Syncopated bass guitar'], ['Soft organ chords', 'Brush-and-stick pocket drums'], ['Filtered synth chords', 'Slap bass accents'], ['Piano soul fills', 'Live hi-hat pocket'] ],
-      'Hip-Hop & Rap': [ ['Deep 808 bass', 'Tight trap hi-hats'], ['Dusty sampled piano', 'Boom-bap drum break'], ['Dark synth bass', 'Sparse drill percussion'], ['Vinyl-sampled keys', 'Loose kick-and-snare pocket'], ['Bell synth motif', 'Rolling triplet hats'], ['Muted guitar sample', 'Heavy sub kick'], ['Warm Rhodes sample', 'Crisp rimshot groove'], ['Moody string sample', 'Syncopated 808 pattern'], ['Chopped vocal texture', 'Dry punchy drums'], ['Analog bass synth', 'Off-grid hip-hop hats'], ['Jazzy piano loop', 'Snare-forward boom-bap kit'], ['Distorted bass texture', 'Rapid drill hats'], ['Flute sample lead', 'Deep kick and clap'], ['Lo-fi cassette keys', 'Dusty drum break'] ],
-      'Electronic & Dance': [ ['Analog synth bass', 'Four-on-the-floor kick'], ['Bright trance pluck', 'Rolling club percussion'], ['Deep house organ', 'Shuffled hi-hat groove'], ['Acid bass synth', 'Crisp techno hats'], ['Granular pad texture', 'Breakbeat drum kit'], ['FM bell synth', 'Tight electro drums'], ['Vocoder chord stack', 'Pumping house kick'], ['Sawtooth lead synth', 'Driving gated drums'], ['Arpeggiated synth sequence', 'Sidechained bass pulse'], ['Dub siren synth', 'Skittering garage drums'], ['Glassy digital pad', 'Jungle breakbeat kit'], ['Wavetable bass growl', 'Half-time electronic drums'], ['Warm tape synth', 'Loose downtempo percussion'], ['Noisy industrial synth', 'Metallic machine drums'], ['Retro string synth', 'Punchy electro kick'], ['Digital bell arpeggio', 'Deep sub-bass pulse'], ['Filtered vocal chop', 'Disco-house drum groove'], ['FM bass sequence', 'Tight breakbeat snare'], ['Lush ambient pad', 'Soft electronic pulse'], ['Bitcrushed lead synth', 'Rigid drum-machine beat'], ['Detuned polysynth', 'Rolling rave percussion'], ['Neon synth brass', 'Driving dance kick'], ['Subtle tape-warp pad', 'Minimal electronic clicks'] ],
-      'Rock & Alternative': [ ['Crunch electric guitar', 'Live drum kit'], ['Jangly clean guitar', 'Driving bass guitar'], ['Fuzz guitar wall', 'Roomy acoustic drums'], ['Palm-muted guitar riff', 'Punchy rock bass'], ['Arpeggiated clean guitar', 'Snare-forward drum kit'], ['Phaser guitar texture', 'Tom-heavy live drums'], ['Octave guitar lead', 'Overdriven bass guitar'], ['Feedback guitar swell', 'Wide room drums'], ['Acoustic-electric guitar', 'Dry indie drum kit'], ['Distorted power chords', 'Crash-heavy chorus drums'], ['Tremolo guitar line', 'Steady bass-and-kick drive'], ['Chorus-soaked guitar', 'Loose garage drums'], ['Baritone guitar riff', 'Deep live bass'], ['12-string guitar shimmer', 'Natural room drums'], ['Muted guitar pulse', 'Tight alternative rock kit'], ['Lead guitar harmonics', 'Floor-tom accents'] ],
-      'Metal': [ ['Down-tuned rhythm guitars', 'Double-kick drums'], ['Palm-muted guitars', 'Crushing bass guitar'], ['Tremolo-picked guitars', 'Blast-beat drums'], ['Djent guitar chugs', 'Tight kick drum pattern'], ['Harmonized lead guitars', 'Thunderous toms'], ['Blackened guitar tremolo', 'Rapid double-kick drums'], ['Doom guitar drones', 'Slow heavy tom groove'], ['Metalcore guitar breakdown', 'Punchy kick-and-snare'], ['High-gain guitar harmonies', 'Driving bass drum'], ['Industrial metal synth layer', 'Rigid heavy drums'], ['Progressive lead guitar', 'Complex live drum kit'], ['Sludge guitar fuzz', 'Huge low-tuned bass'] ],
-      'Country, Folk & Roots': [ ['Acoustic guitar picking', 'Brush-and-kick country drums'], ['Pedal steel phrases', 'Upright bass pulse'], ['Banjo rolls', 'Acoustic rhythm guitar'], ['Mandolin chop', 'Walking upright bass'], ['Fiddle lead', 'Snare-and-kick two-step'], ['Dobro slide guitar', 'Warm bass fiddle'], ['12-string acoustic guitar', 'Light brush drums'], ['Lap steel swells', 'Electric bass groove'], ['Harmonica fills', 'Front-porch acoustic rhythm'], ['Honky-tonk piano', 'Country shuffle drums'], ['Acoustic guitar strum', 'Fiddle-and-bass groove'], ['Resonator guitar', 'Loose roots drum kit'] ],
-      'Jazz & Latin': [ ['Upright bass walking line', 'Brush jazz drums'], ['Nylon-string guitar', 'Latin percussion'], ['Rhodes jazz chords', 'Ride-cymbal swing'], ['Muted trumpet lead', 'Upright bass pulse'], ['Saxophone melody', 'Brush-and-snare kit'], ['Piano montuno', 'Congas and bongos'], ['Hollow-body guitar', 'Jazz ride groove'], ['Vibraphone chords', 'Soft upright bass'], ['Flugelhorn phrases', 'Brushes and rim clicks'], ['Organ jazz comping', 'Swinging walking bass'], ['Marimba patterns', 'Clave-led percussion'], ['Piano ballad voicings', 'Light jazz drum kit'] ],
-      'Reggae & Global': [ ['Skanking electric guitar', 'One-drop drum groove'], ['Dub bassline', 'Off-beat guitar chops'], ['Organ bubble chords', 'Deep reggae drums'], ['Nyabinghi hand percussion', 'Round bass guitar'], ['Muted guitar skank', 'Dancehall kick-and-snare'], ['Melodic marimba', 'Afrobeat drum groove'], ['Brass section stabs', 'Syncopated global percussion'], ['Palm-muted guitar', 'Dub echo bass'], ['Kalimba patterns', 'Loose hand percussion'], ['Clean reggae guitar', 'Roots drum kit'], ['Synth organ bubble', 'Dancehall percussion'], ['Highlife guitar lines', 'Cross-rhythmic drums'] ],
-      'Cinematic & Instrumental': [ ['Piano ostinato', 'Warm string ensemble'], ['Cello pulse', 'Soft piano motif'], ['Brass swells', 'Low orchestral percussion'], ['Solo violin line', 'Deep cinematic drones'], ['Plucked harp texture', 'String ostinato'], ['Woodwind ensemble', 'Timpani accents'], ['Analog cinematic pad', 'Grand piano chords'], ['Low cello drones', 'Soft mallet percussion'], ['Prepared piano texture', 'Sparse string harmonics'], ['Choir pad', 'Orchestral bass drum'], ['Minimalist piano pattern', 'Muted string pulse'], ['Ambient synth bed', 'Subtle mallet motif'] ]
+      'Pop & Contemporary': [ 
+        ['Bright synth plucks', 'Tight electronic drums'], ['Airy pad chords', 'Punchy pop bass'], 
+        ['Glossy piano stabs', 'Crisp programmed percussion'], ['Muted rhythm guitar', 'Warm synth bass'], 
+        ['Bell-like keys', 'Snappy clap and kick groove'], ['Dreamy polysynths', 'Soft electronic percussion'], 
+        ['Acoustic piano accents', 'Deep modern pop bass'], ['Shimmering arpeggiator', 'Dry punchy drums'], 
+        ['Vocal-chop synth hook', 'Round sub bass'], ['Clean electric guitar', 'Bright drum-machine groove'], 
+        ['Analog synth strings', 'Tight pop kick and snare'], ['Plucked digital keys', 'Bouncy synth bass'], 
+        ['Wide chorus guitar', 'Layered electronic drums'], ['Soft felt piano', 'Subtle synth pulse'] 
+      ],
+      'R&B, Soul & Funk': [ 
+        ['Rhodes electric piano', 'Round fingerstyle bass'], ['Clavinet funk stabs', 'Dry pocket drums'], 
+        ['Wurlitzer chords', 'Muted electric bass'], ['Hammond organ swells', 'Ghost-note drum groove'], 
+        ['Warm synth keys', 'Deep soul bass'], ['Clean guitar comping', 'Loose funk drums'], 
+        ['Moody electric piano', 'Subby bass groove'], ['Talkbox-style synth lead', 'Tight disco-funk drums'], 
+        ['Vintage string pad', 'Syncopated bass guitar'], ['Soft organ chords', 'Brush-and-stick pocket drums'], 
+        ['Filtered synth chords', 'Slap bass accents'], ['Piano soul fills', 'Live hi-hat pocket'] 
+      ],
+      'Hip-Hop & Rap': [ 
+        ['Deep 808 bass', 'Tight trap hi-hats'], ['Dusty sampled piano', 'Boom-bap drum break'], 
+        ['Dark synth bass', 'Sparse drill percussion'], ['Vinyl-sampled keys', 'Loose kick-and-snare pocket'], 
+        ['Bell synth motif', 'Rolling triplet hats'], ['Muted guitar sample', 'Heavy sub kick'], 
+        ['Warm Rhodes sample', 'Crisp rimshot groove'], ['Moody string sample', 'Syncopated 808 pattern'], 
+        ['Chopped vocal texture', 'Dry punchy drums'], ['Analog bass synth', 'Off-grid hip-hop hats'], 
+        ['Jazzy piano loop', 'Snare-forward boom-bap kit'], ['Distorted bass texture', 'Rapid drill hats'], 
+        ['Flute sample lead', 'Deep kick and clap'], ['Lo-fi cassette keys', 'Dusty drum break'] 
+      ],
+      'Electronic & Dance': [ 
+        ['Analog synth bass', 'Four-on-the-floor kick'], ['Bright trance pluck', 'Rolling club percussion'], 
+        ['Deep house organ', 'Shuffled hi-hat groove'], ['Acid bass synth', 'Crisp techno hats'], 
+        ['Granular pad texture', 'Breakbeat drum kit'], ['FM bell synth', 'Tight electro drums'], 
+        ['Vocoder chord stack', 'Pumping house kick'], ['Sawtooth lead synth', 'Driving gated drums'], 
+        ['Arpeggiated synth sequence', 'Sidechained bass pulse'], ['Dub siren synth', 'Skittering garage drums'], 
+        ['Glassy digital pad', 'Jungle breakbeat kit'], ['Wavetable bass growl', 'Half-time electronic drums'], 
+        ['Warm tape synth', 'Loose downtempo percussion'], ['Noisy industrial synth', 'Metallic machine drums'], 
+        ['Retro string synth', 'Punchy electro kick'], ['Digital bell arpeggio', 'Deep sub-bass pulse'], 
+        ['Filtered vocal chop', 'Disco-house drum groove'], ['FM bass sequence', 'Tight breakbeat snare'], 
+        ['Lush ambient pad', 'Soft electronic pulse'], ['Bitcrushed lead synth', 'Rigid drum-machine beat'], 
+        ['Detuned polysynth', 'Rolling rave percussion'], ['Neon synth brass', 'Driving dance kick'], 
+        ['Subtle tape-warp pad', 'Minimal electronic clicks'] 
+      ],
+      'Rock & Alternative': [ 
+        ['Crunch electric guitar', 'Live drum kit'], ['Jangly clean guitar', 'Driving bass guitar'], 
+        ['Fuzz guitar wall', 'Roomy acoustic drums'], ['Palm-muted guitar riff', 'Punchy rock bass'], 
+        ['Arpeggiated clean guitar', 'Snare-forward drum kit'], ['Phaser guitar texture', 'Tom-heavy live drums'], 
+        ['Octave guitar lead', 'Overdriven bass guitar'], ['Feedback guitar swell', 'Wide room drums'], 
+        ['Acoustic-electric guitar', 'Dry indie drum kit'], ['Distorted power chords', 'Crash-heavy chorus drums'], 
+        ['Tremolo guitar line', 'Steady bass-and-kick drive'], ['Chorus-soaked guitar', 'Loose garage drums'], 
+        ['Baritone guitar riff', 'Deep live bass'], ['12-string guitar shimmer', 'Natural room drums'], 
+        ['Muted guitar pulse', 'Tight alternative rock kit'], ['Lead guitar harmonics', 'Floor-tom accents'] 
+      ],
+      'Metal': [ 
+        ['Down-tuned rhythm guitars', 'Double-kick drums'], ['Palm-muted guitars', 'Crushing bass guitar'], 
+        ['Tremolo-picked guitars', 'Blast-beat drums'], ['Djent guitar chugs', 'Tight kick drum pattern'], 
+        ['Harmonized lead guitars', 'Thunderous toms'], ['Blackened guitar tremolo', 'Rapid double-kick drums'], 
+        ['Doom guitar drones', 'Slow heavy tom groove'], ['Metalcore guitar breakdown', 'Punchy kick-and-snare'], 
+        ['High-gain guitar harmonies', 'Driving bass drum'], ['Industrial metal synth layer', 'Rigid heavy drums'], 
+        ['Progressive lead guitar', 'Complex live drum kit'], ['Sludge guitar fuzz', 'Huge low-tuned bass'] 
+      ],
+      'Country, Folk & Roots': [ 
+        ['Acoustic guitar picking', 'Brush-and-kick country drums'], ['Pedal steel phrases', 'Upright bass pulse'], 
+        ['Banjo rolls', 'Acoustic rhythm guitar'], ['Mandolin chop', 'Walking upright bass'], 
+        ['Fiddle lead', 'Snare-and-kick two-step'], ['Dobro slide guitar', 'Warm bass fiddle'], 
+        ['12-string acoustic guitar', 'Light brush drums'], ['Lap steel swells', 'Electric bass groove'], 
+        ['Harmonica fills', 'Front-porch acoustic rhythm'], ['Honky-tonk piano', 'Country shuffle drums'], 
+        ['Acoustic guitar strum', 'Fiddle-and-bass groove'], ['Resonator guitar', 'Loose roots drum kit'] 
+      ],
+      'Jazz & Latin': [ 
+        ['Upright bass walking line', 'Brush jazz drums'], ['Nylon-string guitar', 'Latin percussion'], 
+        ['Rhodes jazz chords', 'Ride-cymbal swing'], ['Muted trumpet lead', 'Upright bass pulse'], 
+        ['Saxophone melody', 'Brush-and-snare kit'], ['Piano montuno', 'Congas and bongos'], 
+        ['Hollow-body guitar', 'Jazz ride groove'], ['Vibraphone chords', 'Soft upright bass'], 
+        ['Flugelhorn phrases', 'Brushes and rim clicks'], ['Organ jazz comping', 'Swinging walking bass'], 
+        ['Marimba patterns', 'Clave-led percussion'], ['Piano ballad voicings', 'Light jazz drum kit'] 
+      ],
+      'Reggae & Global': [ 
+        ['Skanking electric guitar', 'One-drop drum groove'], ['Dub bassline', 'Off-beat guitar chops'], 
+        ['Organ bubble chords', 'Deep reggae drums'], ['Nyabinghi hand percussion', 'Round bass guitar'], 
+        ['Muted guitar skank', 'Dancehall kick-and-snare'], ['Melodic marimba', 'Afrobeat drum groove'], 
+        ['Brass section stabs', 'Syncopated global percussion'], ['Palm-muted guitar', 'Dub echo bass'], 
+        ['Kalimba patterns', 'Loose hand percussion'], ['Clean reggae guitar', 'Roots drum kit'], 
+        ['Synth organ bubble', 'Dancehall percussion'], ['Highlife guitar lines', 'Cross-rhythmic drums'] 
+      ],
+      'Cinematic & Instrumental': [ 
+        ['Piano ostinato', 'Warm string ensemble'], ['Cello pulse', 'Soft piano motif'], 
+        ['Brass swells', 'Low orchestral percussion'], ['Solo violin line', 'Deep cinematic drones'], 
+        ['Plucked harp texture', 'String ostinato'], ['Woodwind ensemble', 'Timpani accents'], 
+        ['Analog cinematic pad', 'Grand piano chords'], ['Low cello drones', 'Soft mallet percussion'], 
+        ['Prepared piano texture', 'Sparse string harmonics'], ['Choir pad', 'Orchestral bass drum'], 
+        ['Minimalist piano pattern', 'Muted string pulse'], ['Ambient synth bed', 'Subtle mallet motif'] 
+      ]
     };
 
     const GENRE_PROFILES = Object.assign({}, ARCHETYPES);
@@ -764,13 +1155,12 @@
       $('negOutput').value = neg.join(', ');
     }
 
+    // Dynamic Lyrics Generator matching user topic consistently across stanzas
     function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
     const sec = (tag, lines) => `[${tag}]\n${lines}`;
-    const tVar = () => pick(['the feeling', 'the moment', 'the memory', 'the fire', 'the shadow', 'the truth', 'this rhythm']);
 
     const LYRIC_BUILDERS = {
-      'pop-standard': () => {
-        const t = tVar();
+      'pop-standard': (t) => {
         return sec('Verse 1', pick([`Headlights cutting through the velvet haze\nHolding on to every second of these bittersweet days\nThinking about ${t}`, `Static on the radio, static in my mind\nStill I keep circling back to ${t}\nLeaving every doubt I had behind`])) + '\n\n' +
                sec('Pre-Chorus', pick([`And I feel the temperature starting to climb\nGive me one more breath before we cross the line`, `Every second stretches slower than before\nStanding at the edge, I'm begging for more`])) + '\n\n' +
                sec('Chorus', pick([`We're dancing on the edge of the wire\nTurning all our heartaches into gasoline and fire\nOh we are golden, fearless and free`, `We're chasing ${t} through the dark\nLetting every ember turn into a spark\nOh we are golden, fearless and free`])) + '\n\n' +
@@ -779,23 +1169,22 @@
                sec('Chorus', pick([`We're dancing on the edge of the wire\nTurning all our heartaches into gasoline and fire\nOh we are golden, fearless and free`, `We're chasing ${t} through the dark\nLetting every ember turn into a spark\nOh we are golden, fearless and free`])) + '\n\n' +
                sec('Outro: Fade Out', pick([`Just keep the lights on\nWe're dancing till the break of day`, `Hold onto ${t}\nWe'll find our way back home someday`]));
       },
-      'club-anthem': () => sec('Intro', pick(['Signals in the wire, waiting for the spark', 'Lights go dark before the room explodes'])) + '\n\n' +
+      'club-anthem': (t) => sec('Intro', pick(['Signals in the wire, waiting for the spark', 'Lights go dark before the room explodes'])) + '\n\n' +
                            sec('Buildup', pick(['Pressure rising underneath the neon light\nThree, two, one - ignite!', 'Feel it building underneath your skin\nThis is where it begins!'])) + '\n\n' +
-                           sec('Drop', '') + '\n\n' + sec('Verse', pick([`Lost inside the rhythm of ${tVar()}`, `Nothing matters now but ${tVar()} and this beat`])) + '\n\n' +
+                           sec('Drop', '') + '\n\n' + sec('Verse', pick([`Lost inside the rhythm of ${t}`, `Nothing matters now but ${t} and this beat`])) + '\n\n' +
                            sec('Buildup', pick(['Can you feel the riser climbing to the sky?', 'Hold your breath, the floor is on fire'])) + '\n\n' + sec('Drop', '') + '\n\n' + sec('Outro: Fade Out', ''),
-      'rap-bars': () => sec('Intro', pick([`Yeah. Lights low, frequencies aligned.`, `Real talk, no filter, no fabrication.`])) + '\n\n' +
+      'rap-bars': (t) => sec('Intro', pick([`Yeah. Lights low, frequencies aligned.`, `Real talk, no filter, no fabrication.`])) + '\n\n' +
                         sec('Verse 1', pick([`Started with a quiet whisper in the back of the room\nTraded every hour just to watch the vision bloom`, `Started from the bottom, everybody said I'd fold\nTraded every excuse for a story to be told`])) + '\n\n' +
                         sec('Hook', pick(['Crown heavy, but the shoulders stay strong\nCarrying the heartbeat of the city along', `Steady climbing, never looking at the drop\nProving to myself I'll never stop`])) + '\n\n' +
-                        sec('Verse 2', pick([`Back in the pocket, measure every bar clean\nRazor-sharp focus moving through the widescreen`, `Pen to paper, turning ${tVar()} into art\nEvery line I write becomes a brand new start`])) + '\n\n' +
+                        sec('Verse 2', pick([`Back in the pocket, measure every bar clean\nRazor-sharp focus moving through the widescreen`, `Pen to paper, turning ${t} into art\nEvery line I write becomes a brand new start`])) + '\n\n' +
                         sec('Hook', pick(['Crown heavy, but the shoulders stay strong\nCarrying the heartbeat of the city along', `Steady climbing, never looking at the drop\nProving to myself I'll never stop`])),
-      'cinematic-epic': () => sec('Atmospheric Swell', pick([`Before the first light crossed the silent sea\nA distant promise found its way to me`, `Beneath the ashes of a fallen sun\nThe story of ${tVar()} has just begun`])) + '\n\n' +
+      'cinematic-epic': (t) => sec('Atmospheric Swell', pick([`Before the first light crossed the silent sea\nA distant promise found its way to me`, `Beneath the ashes of a fallen sun\nThe story of ${t} has just begun`])) + '\n\n' +
                               sec('Crescendo', pick(['The clouds divide, the skies ignite\nWe rise above the shadow of the night', `Thunder answers every step we take\nNo wall unbroken, no vow we'll break`])) + '\n\n' +
-                              sec('Climax', pick([`Hold the horizon! Stand where the brave have bled!\nEven when the stars fall into the deep\nThis is the oath that we swore to keep!`, `Rise, and remember why we came this far!\nEven when the sky forgets each star\nWe carry ${tVar()} like an open scar!`])) + '\n\n' + sec('Resolution', ''),
-      'flow-hypnotic': () => sec('Intro', pick(['Breathe into stillness\nLock into the signal\nLeave the static behind', 'Quiet the noise around you\nFind the steady current\nDrift into the center'])) + '\n\n' +
+                              sec('Climax', pick([`Hold the horizon! Stand where the brave have bled!\nEven when the stars fall into the deep\nThis is the oath that we swore to keep!`, `Rise, and remember why we came this far!\nEven when the sky forgets each star\nWe carry ${t} like an open scar!`])) + '\n\n' + sec('Resolution', ''),
+      'flow-hypnotic': (t) => sec('Intro', pick(['Breathe into stillness\nLock into the signal\nLeave the static behind', 'Quiet the noise around you\nFind the steady current\nDrift into the center'])) + '\n\n' +
                              sec('Flow Cadence', pick([`Following the rhythm, quiet with the motion\nLet every wandering thought dissolve in the ocean`, `Nothing to force, nothing left to prove\nJust breath and rhythm finding their own groove`])) + '\n\n' +
                              sec('Center', pick(['Zero hesitation, laser beam focus locked', 'Clear mind, open field, endless focus'])) + '\n\n' + sec('Seamless Loop', ''),
-      'verse-pre-chorus': () => {
-        const t = tVar();
+      'verse-pre-chorus': (t) => {
         return sec('Verse 1', pick([`I can still remember ${t}\nThe little details nobody else could see`, `Looking back at the shape of ${t}\nWondering how we got this far`])) + '\n\n' +
                sec('Pre-Chorus', pick([`Now the distance disappears\nI hear the words we never said`, `One more breath and everything changes\nThe silence is breaking`])) + '\n\n' +
                sec('Chorus', pick([`${t} became the reason I stayed\nThe spark in the dark, the choice that I made\nI won't let the moment slip away`, `We're holding onto ${t} tonight\nStanding fearless in the fading light\nI won't let the moment slip away`])) + '\n\n' +
@@ -803,56 +1192,56 @@
                sec('Chorus', pick([`${t} became the reason I stayed\nThe spark in the dark, the choice that I made\nI won't let the moment slip away`, `We're holding onto ${t} tonight\nStanding fearless in the fading light\nI won't let the moment slip away`])) + '\n\n' +
                sec('Outro', pick([`If the road leads back to ${t}\nI'll meet it with open eyes`, `Fading out into ${t}\nFading out`]));
       },
-      'story-arc': () => sec('Setup', pick([`Before ${tVar()}, I thought I knew where the road would end.`, `The city was quiet, oblivious to ${tVar()}.`])) + '\n\n' +
-                         sec('Inciting Moment', pick([`Then ${tVar()} changed the shape of everything.`, `And suddenly, ${tVar()} demanded an answer.`])) + '\n\n' +
+      'story-arc': (t) => sec('Setup', pick([`Before ${t}, I thought I knew where the road would end.`, `The city was quiet, oblivious to ${t}.`])) + '\n\n' +
+                         sec('Inciting Moment', pick([`Then ${t} changed the shape of everything.`, `And suddenly, ${t} demanded an answer.`])) + '\n\n' +
                          sec('Turn', pick([`I lost what I thought I needed, and found what I could not name.`, `The path disappeared, leaving only a choice.`])) + '\n\n' +
-                         sec('Climax', pick([`Now ${tVar()} is no longer a memory — it is the choice I make.`, `We break through the silence, forever changed by ${tVar()}.`])) + '\n\n' +
+                         sec('Climax', pick([`Now ${t} is no longer a memory — it is the choice I make.`, `We break through the silence, forever changed by ${t}.`])) + '\n\n' +
                          sec('Resolution', pick([`I carry the lesson forward, lighter than before.`, `What remains is quiet strength.`])),
-      'rap-story': () => sec('Verse 1 — 16 Bars', pick([`I came in with a plan, then ${tVar()} changed the route\nEvery setback put a sharper truth inside the mouth\nNo shortcut, no disguise, just pressure and proof\nI kept the story moving when they said it was through`, `Walking through the echoes, looking at the past\nKnowing that ${tVar()} was never gonna last\nI built a foundation on the things I had to lose\nNow I'm making moves, giving 'em the absolute truth`])) + '\n\n' +
-                         sec('Hook', pick([`${tVar()}, that's the chapter I survived\nTurned a closed door to a reason to arrive`, `Yeah, we rising above ${tVar()}\nNothing can stop the rhythm we love`])) + '\n\n' +
-                         sec('Verse 2 — 16 Bars', pick([`Now I measure every lesson by the nights it cost\nWhat I thought was being broken was a map I had lost\n${tVar()} in the rear-view, but the meaning stays close\nI write it in the rhythm, then I let the beat expose it`, `Look at the horizon, the color of the dawn\nEvery little failure is the reason I go on\nWe turn ${tVar()} into a stepping stone\nBuilding an empire on my own`])),
-      'cinematic-three-act': () => sec('ACT I — THE WORLD BEFORE', pick([`A quiet world held its breath around ${tVar()}.`, `The shadow of ${tVar()} loomed in the distance.`])) + '\n\n' +
-                                   sec('ACT II — THE FRACTURE', pick([`The choice arrives; ${tVar()} becomes impossible to ignore.\nStrings rise, percussion gathers, the horizon opens.`, `Tension builds as ${tVar()} reveals its true nature.\nThe drums echo the heartbeat of the fallen.`])) + '\n\n' +
-                                   sec('ACT III — THE RECKONING', pick([`At the peak, ${tVar()} is transformed from fear into purpose.`, `The climax shatters the silence. Victory at a high cost.`])) + '\n\n' +
-                                   sec('CODA — AFTERMATH', pick([`The noise falls away. What remains is the truth learned from the journey.`, `A single solitary note. The story of ${tVar()} ends in peace.`])),
-      'indie-diary': () => sec('Verse 1', pick([`I wrote down ${tVar()} in the margin of an old receipt\nLike if I named it softly, it might finally leave me`, `Looking out the window, staring at the rain\nThinking about ${tVar()} and trying to explain`])) + '\n\n' +
-                           sec('Chorus', pick([`I don't need a perfect ending\nI just need an honest one\n${tVar()}, I am finally listening`, `It's just a whisper in the dark\nJust a single tiny spark\nBut ${tVar()} is pulling me apart`])) + '\n\n' +
-                           sec('Verse 2', pick([`The smallest details keep returning\nA street, a voice, a half-lit room\nAll of them pointing back to ${tVar()}`, `Coffee on the table, shadows on the wall\nWondering if ${tVar()} ever mattered at all`])) + '\n\n' +
+      'rap-story': (t) => sec('Verse 1 — 16 Bars', pick([`I came in with a plan, then ${t} changed the route\nEvery setback put a sharper truth inside the mouth\nNo shortcut, no disguise, just pressure and proof\nI kept the story moving when they said it was through`, `Walking through the echoes, looking at the past\nKnowing that ${t} was never gonna last\nI built a foundation on the things I had to lose\nNow I'm making moves, giving 'em the absolute truth`])) + '\n\n' +
+                         sec('Hook', pick([`${t}, that's the chapter I survived\nTurned a closed door to a reason to arrive`, `Yeah, we rising above ${t}\nNothing can stop the rhythm we love`])) + '\n\n' +
+                         sec('Verse 2 — 16 Bars', pick([`Now I measure every lesson by the nights it cost\nWhat I thought was being broken was a map I had lost\n${t} in the rear-view, but the meaning stays close\nI write it in the rhythm, then I let the beat expose it`, `Look at the horizon, the color of the dawn\nEvery little failure is the reason I go on\nWe turn ${t} into a stepping stone\nBuilding an empire on my own`])),
+      'cinematic-three-act': (t) => sec('ACT I — THE WORLD BEFORE', pick([`A quiet world held its breath around ${t}.`, `The shadow of ${t} loomed in the distance.`])) + '\n\n' +
+                                   sec('ACT II — THE FRACTURE', pick([`The choice arrives; ${t} becomes impossible to ignore.\nStrings rise, percussion gathers, the horizon opens.`, `Tension builds as ${t} reveals its true nature.\nThe drums echo the heartbeat of the fallen.`])) + '\n\n' +
+                                   sec('ACT III — THE RECKONING', pick([`At the peak, ${t} is transformed from fear into purpose.`, `The climax shatters the silence. Victory at a high cost.`])) + '\n\n' +
+                                   sec('CODA — AFTERMATH', pick([`The noise falls away. What remains is the truth learned from the journey.`, `A single solitary note. The story of ${t} ends in peace.`])),
+      'indie-diary': (t) => sec('Verse 1', pick([`I wrote down ${t} in the margin of an old receipt\nLike if I named it softly, it might finally leave me`, `Looking out the window, staring at the rain\nThinking about ${t} and trying to explain`])) + '\n\n' +
+                           sec('Chorus', pick([`I don't need a perfect ending\nI just need an honest one\n${t}, I am finally listening`, `It's just a whisper in the dark\nJust a single tiny spark\nBut ${t} is pulling me apart`])) + '\n\n' +
+                           sec('Verse 2', pick([`The smallest details keep returning\nA street, a voice, a half-lit room\nAll of them pointing back to ${t}`, `Coffee on the table, shadows on the wall\nWondering if ${t} ever mattered at all`])) + '\n\n' +
                            sec('Outro', pick([`I close the book, but keep the page`, `Let it fade away, let it fade`])),
-      'call-response': () => sec('Call', pick([`What are we running from?`, `Who will stand with us?`])) + '\n' + sec('Response', pick([`${tVar()} — and everything we never said.`, `We will face ${tVar()} until the end.`])) + '\n\n' +
-                             sec('Call', pick([`What are we reaching for?`, `Where do we go from here?`])) + '\n' + sec('Response', pick([`A way through ${tVar()}, a reason to stay.`, `Beyond ${tVar()}, into the light.`])) + '\n\n' +
-                             sec('Call', pick([`Will the night remember us?`, `Is it over?`])) + '\n' + sec('Response', pick([`Only if we turn ${tVar()} into a song.`, `Not until we conquer ${tVar()}.`])),
-      'anthem-build': () => sec('Verse — restrained', pick([`It started quietly with ${tVar()}\nOne small signal underneath the noise`, `Just a flicker in the dark\n${tVar()} waiting for a spark`])) + '\n\n' +
+      'call-response': (t) => sec('Call', pick([`What are we running from?`, `Who will stand with us?`])) + '\n' + sec('Response', pick([`${t} — and everything we never said.`, `We will face ${t} until the end.`])) + '\n\n' +
+                             sec('Call', pick([`What are we reaching for?`, `Where do we go from here?`])) + '\n' + sec('Response', pick([`A way through ${t}, a reason to stay.`, `Beyond ${t}, into the light.`])) + '\n\n' +
+                             sec('Call', pick([`Will the night remember us?`, `Is it over?`])) + '\n' + sec('Response', pick([`Only if we turn ${t} into a song.`, `Not until we conquer ${t}.`])),
+      'anthem-build': (t) => sec('Verse — restrained', pick([`It started quietly with ${t}\nOne small signal underneath the noise`, `Just a flicker in the dark\n${t} waiting for a spark`])) + '\n\n' +
                             sec('Pre-Chorus — rising', pick([`Every heartbeat gets louder\nEvery doubt gives way`, `The pressure is building\nThe shadows are breaking`])) + '\n\n' +
-                            sec('Chorus — full', pick([`${tVar()}, we rise together\nHigher than the fear, louder than the weather\nThis is the moment we were made to claim`, `We're breaking out, stepping into the sun\nWith ${tVar()}, our journey has just begun`])) + '\n\n' +
-                            sec('Final Chorus — bigger', pick([`${tVar()}, let the whole world hear it\nNo looking back, no reason to fear it`, `Screaming out to the sky\nWith ${tVar()}, we'll never die`])),
-      'chorus-first': () => sec('Chorus', pick([`${tVar()} hits me first, no warning, no delay\nEvery heartbeat says I'm never walking away`, `This is the sound of ${tVar()}\nEchoing loud, impossible to ignore`])) + '\n\n' +
-                            sec('Verse 1', pick([`Started as a whisper, ended as a scream\nEverything about ${tVar()} became the only theme`, `Looking at the pieces scattered on the floor\nKnowing that ${tVar()} is knocking at the door`])) + '\n\n' +
-                            sec('Chorus', pick([`${tVar()} hits me first, no warning, no delay\nEvery heartbeat says I'm never walking away`, `This is the sound of ${tVar()}\nEchoing loud, impossible to ignore`])) + '\n\n' +
+                            sec('Chorus — full', pick([`${t}, we rise together\nHigher than the fear, louder than the weather\nThis is the moment we were made to claim`, `We're breaking out, stepping into the sun\nWith ${t}, our journey has just begun`])) + '\n\n' +
+                            sec('Final Chorus — bigger', pick([`${t}, let the whole world hear it\nNo looking back, no reason to fear it`, `Screaming out to the sky\nWith ${t}, we'll never die`])),
+      'chorus-first': (t) => sec('Chorus', pick([`${t} hits me first, no warning, no delay\nEvery heartbeat says I'm never walking away`, `This is the sound of ${t}\nEchoing loud, impossible to ignore`])) + '\n\n' +
+                            sec('Verse 1', pick([`Started as a whisper, ended as a scream\nEverything about ${t} became the only theme`, `Looking at the pieces scattered on the floor\nKnowing that ${t} is knocking at the door`])) + '\n\n' +
+                            sec('Chorus', pick([`${t} hits me first, no warning, no delay\nEvery heartbeat says I'm never walking away`, `This is the sound of ${t}\nEchoing loud, impossible to ignore`])) + '\n\n' +
                             sec('Bridge', pick([`Maybe it was never about the ending\nJust about the moment we stopped pretending`, `Take a breath and count to ten\nHere we go around again`])) + '\n\n' +
-                            sec('Final Chorus', pick([`${tVar()} hits me first, no warning, no delay\nLouder now, unshaken, here to stay`, `This is the sound of ${tVar()}\nEchoing loud, forevermore`])),
-      'aaba-jazz': () => sec('A — Statement', pick([`Late at night I think of ${tVar()}, soft and slow\nEvery little memory returns just like an old song I know`, `The moon is high, the city sleeps\nAnd ${tVar()} is the secret that my heart keeps`])) + '\n\n' +
-                         sec('A — Repeat', pick([`Still the candle flickers when I think of ${tVar()}'s name\nSomehow every evening feels a little bit the same`, `The smoke curls up, the piano plays\nLost inside the rhythm of these ${tVar()} days`])) + '\n\n' +
+                            sec('Final Chorus', pick([`${t} hits me first, no warning, no delay\nLouder now, unshaken, here to stay`, `This is the sound of ${t}\nEchoing loud, forevermore`])),
+      'aaba-jazz': (t) => sec('A — Statement', pick([`Late at night I think of ${t}, soft and slow\nEvery little memory returns just like an old song I know`, `The moon is high, the city sleeps\nAnd ${t} is the secret that my heart keeps`])) + '\n\n' +
+                         sec('A — Repeat', pick([`Still the candle flickers when I think of ${t}'s name\nSomehow every evening feels a little bit the same`, `The smoke curls up, the piano plays\nLost inside the rhythm of these ${t} days`])) + '\n\n' +
                          sec('B — Bridge / Release', pick([`Then the room goes quiet, and the truth comes through\nNothing ever really compares to you`, `But when the morning light breaks through the blind\nYou're the only thing that's on my mind`])) + '\n\n' +
-                         sec('A — Return', pick([`So I'll keep on humming, thinking of ${tVar()}, soft and slow\nHolding every memory close before I let it go`, `The moon goes down, the music fades\nBut the shadow of ${tVar()} always stays`])),
-      'build-drop-multi': () => sec('Intro', pick(['Signal rising, counting down the seconds', 'Frequencies aligning in the dark'])) + '\n\n' +
+                         sec('A — Return', pick([`So I'll keep on humming, thinking of ${t}, soft and slow\nHolding every memory close before I let it go`, `The moon goes down, the music fades\nBut the shadow of ${t} always stays`])),
+      'build-drop-multi': (t) => sec('Intro', pick(['Signal rising, counting down the seconds', 'Frequencies aligning in the dark'])) + '\n\n' +
                                 sec('Build 1', pick(['Energy climbing, pressure locked and loaded', 'Pushing to the redline, ready to go'])) + '\n\n' + sec('Drop 1', '') + '\n\n' +
-                                sec('Verse', pick([`Lost inside the pulse of ${tVar()}\nEvery frequency pulling me back in`, `Surfing on the wave of ${tVar()}\nNothing else exists right now`])) + '\n\n' +
+                                sec('Verse', pick([`Lost inside the pulse of ${t}\nEvery frequency pulling me back in`, `Surfing on the wave of ${t}\nNothing else exists right now`])) + '\n\n' +
                                 sec('Break', pick(['Strip it back, let the low end breathe', 'Total silence before the storm'])) + '\n\n' +
                                 sec('Build 2', pick(['Bigger this time, nowhere left to hide', 'Maximum overdrive, brace for impact'])) + '\n\n' + sec('Drop 2 — Bigger', '') + '\n\n' +
-                                sec('Outro', pick([`Fade into the afterglow of ${tVar()}`, `Ringing out into the night`])),
-      'through-composed': () => sec('Movement I', pick([`It began quietly, ${tVar()} barely a sound in the distance`, `First there was nothing, then a whisper of ${tVar()}`])) + '\n\n' +
-                                sec('Movement II', pick([`Slowly it grew — shape, color, weight — impossible to ignore`, `The current pulled stronger, pulling us toward ${tVar()}`])) + '\n\n' +
-                                sec('Movement III', pick([`At its peak, ${tVar()} was the only truth left standing`, `A collision of sound and light, ${tVar()} absolute`])) + '\n\n' +
-                                sec('Movement IV', pick([`And then, gently, it settled — changed, but still whole`, `The echo remains, a testament to ${tVar()}`])),
-      'loop-vamp': () => sec('Vamp — Loop A', pick([`${tVar()}, ${tVar()}, carry me through`, `Moving with ${tVar()}, moving with the sound`])) + '\n\n' +
+                                sec('Outro', pick([`Fade into the afterglow of ${t}`, `Ringing out into the night`])),
+      'through-composed': (t) => sec('Movement I', pick([`It began quietly, ${t} barely a sound in the distance`, `First there was nothing, then a whisper of ${t}`])) + '\n\n' +
+                                sec('Movement II', pick([`Slowly it grew — shape, color, weight — impossible to ignore`, `The current pulled stronger, pulling us toward ${t}`])) + '\n\n' +
+                                sec('Movement III', pick([`At its peak, ${t} was the only truth left standing`, `A collision of sound and light, ${t} absolute`])) + '\n\n' +
+                                sec('Movement IV', pick([`And then, gently, it settled — changed, but still whole`, `The echo remains, a testament to ${t}`])),
+      'loop-vamp': (t) => sec('Vamp — Loop A', pick([`${t}, ${t}, carry me through`, `Moving with ${t}, moving with the sound`])) + '\n\n' +
                          sec('Vamp — Loop B', pick([`Hold the groove, let it move, nothing left to prove`, `Don't stop the beat, feel the heat`])) + '\n\n' +
-                         sec('Vamp — Loop A', pick([`${tVar()}, ${tVar()}, carry me through`, `Moving with ${tVar()}, moving with the sound`])),
-      'power-ballad': () => sec('Verse 1 — Sparse', pick([`Just a candle and a quiet room\nThinking slowly about ${tVar()}`, `A single note ringing in the dark\nWaiting for the spark of ${tVar()}`])) + '\n\n' +
+                         sec('Vamp — Loop A', pick([`${t}, ${t}, carry me through`, `Moving with ${t}, moving with the sound`])),
+      'power-ballad': (t) => sec('Verse 1 — Sparse', pick([`Just a candle and a quiet room\nThinking slowly about ${t}`, `A single note ringing in the dark\nWaiting for the spark of ${t}`])) + '\n\n' +
                             sec('Pre-Chorus — Rising', pick([`And the walls start closing in around this feeling`, `I can feel the thunder rolling in the distance`])) + '\n\n' +
-                            sec('Chorus — Full Band', pick([`This is ${tVar()}, bigger than the both of us\nI won't let it go without a fight`, `Standing in the rain, screaming for ${tVar()}\nI will never back down tonight`])) + '\n\n' +
+                            sec('Chorus — Full Band', pick([`This is ${t}, bigger than the both of us\nI won't let it go without a fight`, `Standing in the rain, screaming for ${t}\nI will never back down tonight`])) + '\n\n' +
                             sec('Bridge — Strip Back', pick([`Just my voice, and everything I couldn't say`, `A broken whisper in the hurricane`])) + '\n\n' +
-                            sec('Final Chorus — Everything', pick([`This is ${tVar()}, louder now than yesterday\nI won't let it go, not this time`, `Standing in the rain, screaming for ${tVar()}\nI will never back down tonight`]))
+                            sec('Final Chorus — Everything', pick([`This is ${t}, louder now than yesterday\nI won't let it go, not this time`, `Standing in the rain, screaming for ${t}\nI will never back down tonight`]))
     };
 
     function updateLyricMetrics() {
@@ -912,15 +1301,15 @@
 
     function generateLyrics() {
       const includeCues = $('includeCues').checked;
-      const topicRaw = $('topicInput').value || 'neon lights';
-      const antiBleed = `[Theme: ${topicRaw}]\n///*****///\n\n`;
+      const rawTopic = $('topicInput').value.trim() || 'the feeling';
+      const antiBleed = `[Theme: ${rawTopic}]\n///*****///\n\n`;
       let text;
       
       if ($('vocalSelect').value === 'instrumental') {
         text = applyMorphCuesToLyrics(`${antiBleed}[Instrumental Arrangement - No Vocals]\n\n[Movement I: Atmospheric Introduction]\n\n[Movement II: The Groove Enters]\n\n[Movement III: The Emotional Peak]\n\n[Movement IV: Resolution & Decay]\n\n[Fade Out]`);
       } else {
         const builder = LYRIC_BUILDERS[$('structureSelect').value] || LYRIC_BUILDERS['pop-standard'];
-        text = applyMorphCuesToLyrics(antiBleed + builder());
+        text = applyMorphCuesToLyrics(antiBleed + builder(rawTopic));
       }
       $('lyricsOutput').value = includeCues ? text : stripPerformanceCues(text);
       updateLyricMetrics();
@@ -1072,6 +1461,8 @@
         if (cue) { $('lyricsOutput').value += `\n${cue}\n`; updateLyricMetrics(); $('lyricsOutput').scrollTop =$('lyricsOutput').scrollHeight; }
       };
     });
+
+    $('copyChainBtn').onclick = () => copyText($('chainOutput').value, 'Extension Steps Copied!');
 
     ['styleInput', 'moodInput', 'tempoInput'].forEach(id => { $(id).addEventListener('input', compilePrompt); });
 
