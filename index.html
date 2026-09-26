@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   
   <title>PromptWeaver - Music Prompt Workbench</title>
-  <meta name="description" content="Advanced workbench for crafting precision music AI prompts for Suno, Udio, MusicGen, and Stable Audio.">
+  <meta name="description" content="Advanced workbench for crafting precision music AI prompts for Suno, Udio, MusicGen, StepAudio 3, and Flow Music.">
   
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -47,7 +47,7 @@
         <div>
           <div class="flex items-center gap-2">
             <h1 class="text-base font-semibold tracking-tight text-white">PromptWeaver</h1>
-            <span class="text-xs px-2 py-0.5 rounded bg-studio-800 text-amber-400 font-mono">v2.5 Touch</span>
+            <span class="text-xs px-2 py-0.5 rounded bg-studio-800 text-amber-400 font-mono">v2.6 Touch</span>
           </div>
           <p class="text-xs text-studio-400">Precision Music Prompt &amp; Lyric Studio</p>
         </div>
@@ -241,7 +241,7 @@
                 <button type="button" class="touch-target engine-card p-2 rounded-lg border border-studio-800 bg-studio-950 text-center transition-all" data-engine="musicgen" data-engine-label="MusicGen">
                   <div class="text-sm font-semibold text-studio-200">Gen</div>
                 </button>
-                <button type="button" class="touch-target engine-card p-2 rounded-lg border border-studio-800 bg-studio-950 text-center transition-all" data-engine="flow" data-engine-label="Flow">
+                <button type="button" class="touch-target engine-card p-2 rounded-lg border border-studio-800 bg-studio-950 text-center transition-all" data-engine="flow" data-engine-label="Flow Music">
                   <div class="text-sm font-semibold text-studio-200">Flow</div>
                 </button>
               </div>
@@ -411,8 +411,8 @@
               <button class="insert-cue touch-target px-2.5 py-1 rounded bg-studio-800 hover:bg-studio-700 text-studio-300 font-mono text-xs transition-colors" data-cue="( )">( ) Harmonies</button>
               <button class="insert-cue touch-target px-2.5 py-1 rounded bg-studio-800 hover:bg-studio-700 text-studio-300 font-mono text-xs transition-colors" data-cue="ALL CAPS">ALL CAPS (Belt)</button>
               <button class="insert-cue touch-target px-2.5 py-1 rounded bg-studio-800 hover:bg-studio-700 text-studio-300 font-mono text-xs transition-colors" data-cue="wor-r-r-rd">- Stretch</button>
-              <button class="insert-cue touch-target px-2.5 py-1 rounded bg-studio-800 hover:bg-studio-700 text-studio-300 font-mono text-xs transition-colors" data-cue="...">... Pause</button>
               <button class="insert-cue touch-target px-2.5 py-1 rounded bg-studio-800 hover:bg-studio-700 text-studio-300 font-mono text-xs transition-colors" data-cue="[Verse: acoustic, whispered vocal]">[Local Style]</button>
+              <button class="insert-cue touch-target px-2.5 py-1 rounded bg-studio-800 hover:bg-studio-700 text-studio-300 font-mono text-xs transition-colors" data-cue="[Chorus | Anthemic | Stacked Harmonies]">[Section | Tags]</button>
             </div>
             
             <textarea id="lyricsOutput" rows="12" class="touch-target w-full bg-studio-950 border border-studio-800 focus:border-amber-500 rounded-lg p-4 text-base font-mono text-studio-100 leading-relaxed outline-none resize-y"></textarea>
@@ -715,7 +715,7 @@
       
       let promptStr = '';
       if (currentEngine === 'suno') {
-        $('enginePromptTitle').textContent = 'Suno Style Prompt (v3.5 / v4)';
+        $('enginePromptTitle').textContent = 'Suno Style Prompt (v3.5 / v4 / v5.5)';
         const parts = [style, genre && !style.toLowerCase().includes(genre.toLowerCase()) ? genre : '', mood ? mood + ' vibe' : '', tempo];
         if (vocalPref === 'instrumental') parts.push('instrumental'); else if (vocalPref === 'vocoder') parts.push('vocoder vocals'); else if (vocalPref !== 'auto') parts.push(`${vocalPref} vocals`);
         parts.push(...chosenTags);
@@ -738,8 +738,14 @@
         const extra = [...getActive(activeTags.vocals), ...getActive(activeTags.rhythm)];
         if (extra.length) promptStr += ` | Extras: ${extra.join(', ')}`;
       } else if (currentEngine === 'flow') {
-        $('enginePromptTitle').textContent = 'Flow Mode / Ambient';
-        promptStr = ['Continuous focus flow', getTuningLabel(),$('flowLoop').value === 'seamless' ? 'seamless loop' : 'evolving waves', style || genre, mood, tempo, ...chosenTags].filter(Boolean).join(' | ');
+        $('enginePromptTitle').textContent = 'Flow Music (Lyria 3.5)';
+        const p_genre = style || genre || 'Modern Track';
+        const p_mood = mood || 'Neutral vibe';
+        const p_inst = getActive(activeTags.instruments).join(', ') || 'Standard Instrumentation';
+        const p_tempo = tempo || '120 BPM';
+        const p_vocal = vocalPref === 'instrumental' ? 'Instrumental' : (vocalPref !== 'auto' ? `${vocalPref} vocals` : 'Lead vocals');
+        promptStr = `[${p_genre}] [${p_mood}] [${p_inst}] [${p_tempo}] [${p_vocal}]`;
+        if (chosenTags.length) promptStr += ` | ${chosenTags.join(', ')}`;
       }
       
       const morphState = updateMorphOutputs();
