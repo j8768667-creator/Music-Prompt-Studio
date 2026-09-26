@@ -2,16 +2,13 @@
 <html lang="en" class="dark">
 <head>
   <meta charset="UTF-8">
-  <!-- iPad Optimization: Prevent pinch-to-zoom and double-tap zoom -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <!-- iOS Home Screen App Capabilities -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   
   <title>PromptWeaver - Music Prompt Workbench</title>
   <meta name="description" content="Advanced workbench for crafting precision music AI prompts for Suno, Udio, MusicGen, and Stable Audio.">
   
-  <!-- Tailwind CSS via CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -19,11 +16,7 @@
       theme: {
         extend: {
           colors: {
-            studio: {
-              950: '#0d0f12', 900: '#13171d', 850: '#181e26',
-              800: '#202732', 700: '#323c4d', 400: '#8b9bb4',
-              200: '#d5dde8', 100: '#f0f4f9'
-            },
+            studio: { 950: '#0d0f12', 900: '#13171d', 850: '#181e26', 800: '#202732', 700: '#323c4d', 400: '#8b9bb4', 200: '#d5dde8', 100: '#f0f4f9' },
             amber: { 450: '#F59E0B', 550: '#D97706' },
             teal: { 450: '#10B981', 550: '#059669' }
           },
@@ -36,14 +29,8 @@
     };
   </script>
   <style>
-    /* iPad / Touch Specific Optimizations */
-    body {
-      -webkit-tap-highlight-color: transparent; 
-      -webkit-touch-callout: none; 
-    }
-    button, select, input, .touch-target {
-      touch-action: manipulation; 
-    }
+    body { -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; }
+    button, select, input, .touch-target { touch-action: manipulation; }
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: #13171d; }
     ::-webkit-scrollbar-thumb { background: #323c4d; border-radius: 3px; }
@@ -53,13 +40,10 @@
   </style>
 </head>
 <body class="bg-studio-950 text-studio-100 min-h-screen font-sans selection:bg-amber-500/30 selection:text-amber-200 overscroll-none">
-  <!-- TOP BAR -->
   <header class="border-b border-studio-800 bg-studio-900/90 backdrop-blur sticky top-0 z-40">
     <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3 min-h-[60px]">
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-450 to-amber-600 flex items-center justify-center text-studio-950 font-bold text-lg shadow-sm shrink-0">
-          PW
-        </div>
+        <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-450 to-amber-600 flex items-center justify-center text-studio-950 font-bold text-lg shadow-sm shrink-0">PW</div>
         <div>
           <div class="flex items-center gap-2">
             <h1 class="text-base font-semibold tracking-tight text-white">PromptWeaver</h1>
@@ -84,9 +68,7 @@
     </div>
   </header>
 
-  <!-- MAIN WORKSPACE -->
   <main class="max-w-7xl mx-auto px-4 py-6">
-    <!-- PRESET ROW -->
     <div class="mb-6 flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none" style="-webkit-overflow-scrolling: touch;">
       <span class="text-xs font-semibold text-studio-400 uppercase tracking-wider shrink-0 mr-1">Presets:</span>
       <button class="preset-btn touch-target min-h-[36px] px-4 py-1.5 rounded-full bg-studio-900 border border-studio-800 active:border-amber-500 text-sm text-studio-200 whitespace-nowrap transition-colors" data-preset="synthwave-noir">Synthwave Noir</button>
@@ -97,11 +79,13 @@
       <button class="preset-btn touch-target min-h-[36px] px-4 py-1.5 rounded-full bg-studio-900 border border-studio-800 active:border-amber-500 text-sm text-studio-200 whitespace-nowrap transition-colors" data-preset="alt-rnb">Late-Night Alt R&amp;B</button>
       <button class="preset-btn touch-target min-h-[36px] px-4 py-1.5 rounded-full bg-studio-900 border border-studio-800 active:border-amber-500 text-sm text-studio-200 whitespace-nowrap transition-colors" data-preset="modern-metalcore">Modern Metalcore</button>
       <button class="preset-btn touch-target min-h-[36px] px-4 py-1.5 rounded-full bg-studio-900 border border-studio-800 active:border-amber-500 text-sm text-studio-200 whitespace-nowrap transition-colors" data-preset="jazz-electro-swing">Jazz × Electro-Swing</button>
+      <button class="preset-btn touch-target min-h-[36px] px-4 py-1.5 rounded-full bg-studio-900 border border-studio-800 active:border-amber-500 text-sm text-studio-200 whitespace-nowrap transition-colors" data-preset="orchestral-synthwave">Orchestral × Synthwave</button>
+      <button class="preset-btn touch-target min-h-[36px] px-4 py-1.5 rounded-full bg-studio-900 border border-studio-800 active:border-amber-500 text-sm text-studio-200 whitespace-nowrap transition-colors" data-preset="alt-rock-rnb">Alt Rock × R&amp;B</button>
+      <button class="preset-btn touch-target min-h-[36px] px-4 py-1.5 rounded-full bg-studio-900 border border-studio-800 active:border-amber-500 text-sm text-studio-200 whitespace-nowrap transition-colors" data-preset="metal-dubstep">Metal × Dubstep</button>
+      <button class="preset-btn touch-target min-h-[36px] px-4 py-1.5 rounded-full bg-studio-900 border border-studio-800 active:border-amber-500 text-sm text-studio-200 whitespace-nowrap transition-colors" data-preset="folk-dnb">Folk × D&amp;B</button>
     </div>
 
-    <!-- 2-COLUMN STUDIO GRID -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-      <!-- LEFT COLUMN -->
       <div class="lg:col-span-5 space-y-6">
         <div class="bg-studio-900 border border-studio-800 rounded-xl p-5 shadow-sm">
           <div class="flex items-center justify-between pb-3 border-b border-studio-800 mb-4">
@@ -166,7 +150,6 @@
                   <option value="average">Averaged Tempo + Duet Vocals</option>
                 </select>
               </div>
-              <p id="fuseHint" class="text-xs text-studio-500">Blend the Primary Genre above with one or more additional genres — merges their subgenre tags, mood, and instrumentation into one hybrid profile.</p>
             </div>
 
             <div id="morphWrap" class="p-3 rounded-lg border border-studio-800 bg-studio-950/50 space-y-3">
@@ -178,6 +161,7 @@
                 <span class="text-xs text-studio-500 self-center mr-0.5">Presets:</span>
                 <button type="button" class="morph-preset-btn touch-target min-h-[28px] text-xs px-2.5 py-1 rounded-md bg-studio-800 hover:bg-studio-700 text-studio-200 transition-colors" data-morph-preset="seamless">Seamless Blend</button>
                 <button type="button" class="morph-preset-btn touch-target min-h-[28px] text-xs px-2.5 py-1 rounded-md bg-studio-800 hover:bg-studio-700 text-studio-200 transition-colors" data-morph-preset="hardcut">Hard Cut</button>
+                <button type="button" class="morph-preset-btn touch-target min-h-[28px] text-xs px-2.5 py-1 rounded-md bg-studio-800 hover:bg-studio-700 text-studio-200 transition-colors" data-morph-preset="chain">Chain / Extend</button>
               </div>
               <div class="grid grid-cols-4 gap-2">
                 <div>
@@ -206,7 +190,6 @@
                 </div>
               </div>
               <div id="morphMarkers" class="space-y-2"></div>
-              <p id="morphHint" class="text-xs text-studio-500">Structural Cues places ordered section cues in the lyrics/structure box instead of confusing the main prompt.</p>
               <div id="chainPanel" class="hidden space-y-2">
                 <textarea id="chainOutput" rows="4" readonly class="w-full bg-studio-950 border border-studio-800 rounded-lg p-3 text-xs font-mono text-studio-200 leading-relaxed outline-none resize-y"></textarea>
               </div>
@@ -264,7 +247,6 @@
               </div>
             </div>
 
-            <!-- Flow Settings -->
             <div id="flowSettings" class="hidden p-4 rounded-lg border border-studio-800 bg-studio-950 space-y-3">
               <div class="text-sm font-semibold text-amber-400 flex items-center justify-between">
                 <span>Flow Parameters</span>
@@ -338,7 +320,6 @@
         </div>
       </div>
 
-      <!-- RIGHT COLUMN -->
       <div class="lg:col-span-7 space-y-6">
         <div class="flex items-center gap-2 border-b border-studio-800 pb-2">
           <button id="tabPromptBtn" class="touch-target px-5 py-3 rounded-lg bg-studio-850 text-amber-400 font-semibold text-sm border border-amber-500/30 flex items-center gap-2">
@@ -452,7 +433,7 @@
 
         <div class="bg-studio-900 border border-studio-800 rounded-xl p-5 shadow-sm">
           <div class="flex items-center justify-between pb-3 border-b border-studio-800 mb-3">
-            <h3 class="text-base font-semibold text-white">Recent Generations</h3>
+            <h3 class="text-base font-semibold text-white flex items-center gap-2">Recent Generations</h3>
             <button id="clearHistoryBtn" class="touch-target p-2 -mr-2 text-sm text-studio-400 active:text-rose-400 transition-colors">Clear</button>
           </div>
           <div id="historyContainer" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
@@ -469,7 +450,6 @@
   (function(){
     'use strict';
     
-    // FULL DATA DICTIONARIES INCLUDED FOR OFFLINE / STANDALONE FUNCTIONALITY
     const ARCHETYPES = {
       'Synthwave': { label: 'Synthwave', style: 'Synthwave, Darksynth, Outrun', mood: 'Nostalgic, Midnight, Neon', tempo: '118 BPM, F Minor', vocalType: 'male', vocals: ['Emotive falsetto lead', 'Reverb-gated vocal doubles'], instruments: ['Analog saw-wave synth lead', 'Gated snare drum', 'Pulsing arpeggiator bassline', 'LinnDrum'], production: ['80s gated reverb chamber', 'Analog tape saturation'], rhythm: ['Driving four-on-the-floor kick', '16th-note synth arpeggio pulse'], topic: 'Speeding through an empty neon city' },
       'French House': { label: 'French House', style: 'French House, Nu-Disco', mood: 'Euphoric, Groovy, Luxurious', tempo: '124 BPM, D Minor', vocalType: 'vocoder', vocals: ['Vocoder robotic hooks', 'Talkbox harmonies'], instruments: ['Funky slap bass', 'Filtered vinyl sample loops', 'Analog synth brass'], production: ['Heavy sidechain compression pump', 'Resonant low-pass filter sweeps'], rhythm: ['Four-on-the-floor kick', 'Swung syncopated funk pocket'], topic: 'Glittering lights on a Parisian dancefloor' },
@@ -491,7 +471,6 @@
       'Deep Focus Flow': { label: 'Deep Focus Flow', style: 'Binaural Focus, Ambient Drone, Deep Flow', mood: 'Ultra-Focused, Tranquil, Infinite', tempo: '60 BPM, C Major', vocalType: 'instrumental', vocals: ['None - distraction-free focus'], instruments: ['Warm analog drone pad', 'Gentle singing bowl resonance', 'Subtle 10Hz binaural alpha pulse'], production: ['432 Hz warm concert pitch tuning', 'Zero sudden transients', 'Infinite seamless loop'], rhythm: ['Steady 60 BPM human resting pulse', 'Continuous smooth ambient drift'], topic: 'Entering pure uninterrupted deep work and laser focus' }
     };
     
-    // Fallback templates keyed to the exact <optgroup label="..."> text in #genreSelect.
     const CATEGORY_TEMPLATES = {
       'Pop & Contemporary': { mood: 'Catchy, Polished, Upbeat', tempo: '118 BPM, C Major', vocalType: 'female', vocals: ['Crystal clear lead vocal', 'Stacked pop harmonies', 'Airy ad-lib layers'], instruments: ['Bright synth chords', 'Punchy pop bassline', 'Modern hybrid drum kit'], production: ['Glossy radio-ready master', 'Sparkling high-end sheen'], rhythm: ['Driving pop pulse', 'Clap-stacked snare backbeat'], topic: 'Chasing a feeling that will not let go' },
       'R&B, Soul & Funk': { mood: 'Smooth, Soulful, Groovy', tempo: '92 BPM, F Minor', vocalType: 'female', vocals: ['Rich soulful lead vocal', 'Gospel-trained harmony stack'], instruments: ['Warm electric piano', 'Groovy fingerstyle bass', 'Live funky drum kit'], production: ['Warm analog saturation', 'Natural room reverb'], rhythm: ['Behind-the-beat pocket groove', 'Syncopated funk hi-hats'], topic: 'Love, longing, and finding your rhythm' },
@@ -505,6 +484,19 @@
       'Cinematic & Instrumental': { mood: 'Epic, Emotive, Atmospheric', tempo: '80 BPM, D Minor', vocalType: 'instrumental', vocals: ['None - instrumental focus'], instruments: ['Sweeping string section', 'Grand piano motif', 'Deep cinematic sub-bass'], production: ['Wide orchestral stereo image', 'Spacious hall reverb'], rhythm: ['Building orchestral ostinato', 'Slow expressive rubato'], topic: 'A sweeping journey across vast, unknown terrain' }
     };
 
+    const FALLBACK_LAYER_VARIANTS = {
+      'Pop & Contemporary': [ ['Bright synth plucks', 'Tight electronic drums'], ['Airy pad chords', 'Punchy pop bass'], ['Glossy piano stabs', 'Crisp programmed percussion'], ['Muted rhythm guitar', 'Warm synth bass'], ['Bell-like keys', 'Snappy clap and kick groove'], ['Dreamy polysynths', 'Soft electronic percussion'], ['Acoustic piano accents', 'Deep modern pop bass'], ['Shimmering arpeggiator', 'Dry punchy drums'], ['Vocal-chop synth hook', 'Round sub bass'], ['Clean electric guitar', 'Bright drum-machine groove'], ['Analog synth strings', 'Tight pop kick and snare'], ['Plucked digital keys', 'Bouncy synth bass'], ['Wide chorus guitar', 'Layered electronic drums'], ['Soft felt piano', 'Subtle synth pulse'] ],
+      'R&B, Soul & Funk': [ ['Rhodes electric piano', 'Round fingerstyle bass'], ['Clavinet funk stabs', 'Dry pocket drums'], ['Wurlitzer chords', 'Muted electric bass'], ['Hammond organ swells', 'Ghost-note drum groove'], ['Warm synth keys', 'Deep soul bass'], ['Clean guitar comping', 'Loose funk drums'], ['Moody electric piano', 'Subby bass groove'], ['Talkbox-style synth lead', 'Tight disco-funk drums'], ['Vintage string pad', 'Syncopated bass guitar'], ['Soft organ chords', 'Brush-and-stick pocket drums'], ['Filtered synth chords', 'Slap bass accents'], ['Piano soul fills', 'Live hi-hat pocket'] ],
+      'Hip-Hop & Rap': [ ['Deep 808 bass', 'Tight trap hi-hats'], ['Dusty sampled piano', 'Boom-bap drum break'], ['Dark synth bass', 'Sparse drill percussion'], ['Vinyl-sampled keys', 'Loose kick-and-snare pocket'], ['Bell synth motif', 'Rolling triplet hats'], ['Muted guitar sample', 'Heavy sub kick'], ['Warm Rhodes sample', 'Crisp rimshot groove'], ['Moody string sample', 'Syncopated 808 pattern'], ['Chopped vocal texture', 'Dry punchy drums'], ['Analog bass synth', 'Off-grid hip-hop hats'], ['Jazzy piano loop', 'Snare-forward boom-bap kit'], ['Distorted bass texture', 'Rapid drill hats'], ['Flute sample lead', 'Deep kick and clap'], ['Lo-fi cassette keys', 'Dusty drum break'] ],
+      'Electronic & Dance': [ ['Analog synth bass', 'Four-on-the-floor kick'], ['Bright trance pluck', 'Rolling club percussion'], ['Deep house organ', 'Shuffled hi-hat groove'], ['Acid bass synth', 'Crisp techno hats'], ['Granular pad texture', 'Breakbeat drum kit'], ['FM bell synth', 'Tight electro drums'], ['Vocoder chord stack', 'Pumping house kick'], ['Sawtooth lead synth', 'Driving gated drums'], ['Arpeggiated synth sequence', 'Sidechained bass pulse'], ['Dub siren synth', 'Skittering garage drums'], ['Glassy digital pad', 'Jungle breakbeat kit'], ['Wavetable bass growl', 'Half-time electronic drums'], ['Warm tape synth', 'Loose downtempo percussion'], ['Noisy industrial synth', 'Metallic machine drums'], ['Retro string synth', 'Punchy electro kick'], ['Digital bell arpeggio', 'Deep sub-bass pulse'], ['Filtered vocal chop', 'Disco-house drum groove'], ['FM bass sequence', 'Tight breakbeat snare'], ['Lush ambient pad', 'Soft electronic pulse'], ['Bitcrushed lead synth', 'Rigid drum-machine beat'], ['Detuned polysynth', 'Rolling rave percussion'], ['Neon synth brass', 'Driving dance kick'], ['Subtle tape-warp pad', 'Minimal electronic clicks'] ],
+      'Rock & Alternative': [ ['Crunch electric guitar', 'Live drum kit'], ['Jangly clean guitar', 'Driving bass guitar'], ['Fuzz guitar wall', 'Roomy acoustic drums'], ['Palm-muted guitar riff', 'Punchy rock bass'], ['Arpeggiated clean guitar', 'Snare-forward drum kit'], ['Phaser guitar texture', 'Tom-heavy live drums'], ['Octave guitar lead', 'Overdriven bass guitar'], ['Feedback guitar swell', 'Wide room drums'], ['Acoustic-electric guitar', 'Dry indie drum kit'], ['Distorted power chords', 'Crash-heavy chorus drums'], ['Tremolo guitar line', 'Steady bass-and-kick drive'], ['Chorus-soaked guitar', 'Loose garage drums'], ['Baritone guitar riff', 'Deep live bass'], ['12-string guitar shimmer', 'Natural room drums'], ['Muted guitar pulse', 'Tight alternative rock kit'], ['Lead guitar harmonics', 'Floor-tom accents'] ],
+      'Metal': [ ['Down-tuned rhythm guitars', 'Double-kick drums'], ['Palm-muted guitars', 'Crushing bass guitar'], ['Tremolo-picked guitars', 'Blast-beat drums'], ['Djent guitar chugs', 'Tight kick drum pattern'], ['Harmonized lead guitars', 'Thunderous toms'], ['Blackened guitar tremolo', 'Rapid double-kick drums'], ['Doom guitar drones', 'Slow heavy tom groove'], ['Metalcore guitar breakdown', 'Punchy kick-and-snare'], ['High-gain guitar harmonies', 'Driving bass drum'], ['Industrial metal synth layer', 'Rigid heavy drums'], ['Progressive lead guitar', 'Complex live drum kit'], ['Sludge guitar fuzz', 'Huge low-tuned bass'] ],
+      'Country, Folk & Roots': [ ['Acoustic guitar picking', 'Brush-and-kick country drums'], ['Pedal steel phrases', 'Upright bass pulse'], ['Banjo rolls', 'Acoustic rhythm guitar'], ['Mandolin chop', 'Walking upright bass'], ['Fiddle lead', 'Snare-and-kick two-step'], ['Dobro slide guitar', 'Warm bass fiddle'], ['12-string acoustic guitar', 'Light brush drums'], ['Lap steel swells', 'Electric bass groove'], ['Harmonica fills', 'Front-porch acoustic rhythm'], ['Honky-tonk piano', 'Country shuffle drums'], ['Acoustic guitar strum', 'Fiddle-and-bass groove'], ['Resonator guitar', 'Loose roots drum kit'] ],
+      'Jazz & Latin': [ ['Upright bass walking line', 'Brush jazz drums'], ['Nylon-string guitar', 'Latin percussion'], ['Rhodes jazz chords', 'Ride-cymbal swing'], ['Muted trumpet lead', 'Upright bass pulse'], ['Saxophone melody', 'Brush-and-snare kit'], ['Piano montuno', 'Congas and bongos'], ['Hollow-body guitar', 'Jazz ride groove'], ['Vibraphone chords', 'Soft upright bass'], ['Flugelhorn phrases', 'Brushes and rim clicks'], ['Organ jazz comping', 'Swinging walking bass'], ['Marimba patterns', 'Clave-led percussion'], ['Piano ballad voicings', 'Light jazz drum kit'] ],
+      'Reggae & Global': [ ['Skanking electric guitar', 'One-drop drum groove'], ['Dub bassline', 'Off-beat guitar chops'], ['Organ bubble chords', 'Deep reggae drums'], ['Nyabinghi hand percussion', 'Round bass guitar'], ['Muted guitar skank', 'Dancehall kick-and-snare'], ['Melodic marimba', 'Afrobeat drum groove'], ['Brass section stabs', 'Syncopated global percussion'], ['Palm-muted guitar', 'Dub echo bass'], ['Kalimba patterns', 'Loose hand percussion'], ['Clean reggae guitar', 'Roots drum kit'], ['Synth organ bubble', 'Dancehall percussion'], ['Highlife guitar lines', 'Cross-rhythmic drums'] ],
+      'Cinematic & Instrumental': [ ['Piano ostinato', 'Warm string ensemble'], ['Cello pulse', 'Soft piano motif'], ['Brass swells', 'Low orchestral percussion'], ['Solo violin line', 'Deep cinematic drones'], ['Plucked harp texture', 'String ostinato'], ['Woodwind ensemble', 'Timpani accents'], ['Analog cinematic pad', 'Grand piano chords'], ['Low cello drones', 'Soft mallet percussion'], ['Prepared piano texture', 'Sparse string harmonics'], ['Choir pad', 'Orchestral bass drum'], ['Minimalist piano pattern', 'Muted string pulse'], ['Ambient synth bed', 'Subtle mallet motif'] ]
+    };
+
     const GENRE_PROFILES = Object.assign({}, ARCHETYPES);
 
     (function buildFallbackProfiles(){
@@ -513,21 +505,15 @@
         const category = group.getAttribute('label');
         const template = CATEGORY_TEMPLATES[category];
         if (!template) return;
+        const variants = FALLBACK_LAYER_VARIANTS[category] || [];
+        let variantIndex = 0;
         Array.from(group.querySelectorAll('option')).forEach(opt => {
           const name = (opt.value || opt.textContent || '').trim();
           if (!name || GENRE_PROFILES[name]) return; 
+          const layerInstruments = variants.length ? variants[variantIndex++ % variants.length].slice() : template.instruments.slice(0, 2);
           GENRE_PROFILES[name] = {
-            label: name,
-            style: `${name}, ${category}`,
-            mood: template.mood,
-            tempo: template.tempo,
-            vocalType: template.vocalType,
-            vocals: template.vocals.slice(),
-            instruments: template.instruments.slice(),
-            layerInstruments: template.instruments.slice(0, 2),
-            production: template.production.slice(),
-            rhythm: template.rhythm.slice(),
-            topic: template.topic
+            label: name, style: `${name}, ${category}`, mood: template.mood, tempo: template.tempo, vocalType: template.vocalType,
+            vocals: template.vocals.slice(), instruments: template.instruments.slice(), layerInstruments, production: template.production.slice(), rhythm: template.rhythm.slice(), topic: template.topic
           };
         });
       });
@@ -537,95 +523,56 @@
       if (!name) return null;
       if (GENRE_PROFILES[name]) return GENRE_PROFILES[name];
       const lower = name.toLowerCase().trim();
-      for (const k in GENRE_PROFILES) {
-        if (k.toLowerCase() === lower) return GENRE_PROFILES[k];
-      }
+      for (const k in GENRE_PROFILES) { if (k.toLowerCase() === lower) return GENRE_PROFILES[k]; }
       return null;
     }
 
     function fuseGenreProfiles(names) {
-      const seen = new Set();
-      const profiles = [];
-      names.forEach(n => {
-        const p = getGenreProfile(n);
-        if (p && !seen.has(p.label)) { seen.add(p.label); profiles.push(p); }
-      });
-      if (!profiles.length) return null;
-      if (profiles.length === 1) return profiles[0];
-
+      const seen = new Set(); const profiles = [];
+      names.forEach(n => { const p = getGenreProfile(n); if (p && !seen.has(p.label)) { seen.add(p.label); profiles.push(p); } });
+      if (!profiles.length) return null; if (profiles.length === 1) return profiles[0];
       const mergeDescriptors = (arr) => {
         const s = new Set(); const out = [];
-        arr.forEach(str => (str || '').split(',').map(x => x.trim()).forEach(piece => {
-          if (piece && !s.has(piece.toLowerCase())) { s.add(piece.toLowerCase()); out.push(piece); }
-        }));
+        arr.forEach(str => (str || '').split(',').map(x => x.trim()).forEach(piece => { if (piece && !s.has(piece.toLowerCase())) { s.add(piece.toLowerCase()); out.push(piece); } }));
         return out.join(', ');
       };
-
       const mergeTags = (key, perGenre = 3, cap = 6) => {
         const s = new Set(); const out = [];
         for (let i = 0; i < perGenre && out.length < cap; i++) {
-          for (const p of profiles) {
-            const tag = (p[key] || [])[i];
-            if (tag && !s.has(tag.toLowerCase())) { s.add(tag.toLowerCase()); out.push(tag); if (out.length >= cap) break; }
-          }
+          for (const p of profiles) { const tag = (p[key] || [])[i]; if (tag && !s.has(tag.toLowerCase())) { s.add(tag.toLowerCase()); out.push(tag); if (out.length >= cap) break; } }
         }
         return out;
       };
-
       const mode = $('fuseBlendMode').value;
-      let tempo = profiles[0].tempo;
-      let vocalType = profiles[0].vocalType;
-      
+      let tempo = profiles[0].tempo; let vocalType = profiles[0].vocalType;
       if (mode === 'average') {
         const bpms = profiles.map(p => { const m = String(p.tempo||'').match(/(\d+)\s*BPM/i); return m ? Number(m[1]) : null; }).filter(b => b != null);
-        if (bpms.length) {
-          const avg = Math.round(bpms.reduce((a, b) => a + b, 0) / bpms.length);
-          tempo = `${avg} BPM (avg)`;
-        }
+        if (bpms.length) { const avg = Math.round(bpms.reduce((a, b) => a + b, 0) / bpms.length); tempo = `${avg} BPM (avg)`; }
         if (new Set(profiles.map(p => p.vocalType)).size > 1) vocalType = 'duet';
       }
-
       return {
-        label: profiles.map(p => p.label).join(' × ') + ' Fusion',
-        style: mergeDescriptors(profiles.map(p => p.style)),
-        mood: mergeDescriptors(profiles.map(p => p.mood)),
-        tempo, vocalType,
-        vocals: mergeTags('vocals'), instruments: mergeTags('instruments'),
-        production: mergeTags('production'), rhythm: mergeTags('rhythm'),
-        topic: profiles.map(p => p.topic).join(' — meets — ')
+        label: profiles.map(p => p.label).join(' × ') + ' Fusion', style: mergeDescriptors(profiles.map(p => p.style)), mood: mergeDescriptors(profiles.map(p => p.mood)),
+        tempo, vocalType, vocals: mergeTags('vocals'), instruments: mergeTags('instruments'), production: mergeTags('production'), rhythm: mergeTags('rhythm'), topic: profiles.map(p => p.topic).join(' — meets — ')
       };
     }
 
-    function getFuseSelectValues() {
-      return Array.from(document.querySelectorAll('.fuse-select')).map(s => s.value).filter(Boolean);
-    }
+    function getFuseSelectValues() { return Array.from(document.querySelectorAll('.fuse-select')).map(s => s.value).filter(Boolean); }
     function clearFuseSlots() { $('fuseSlots').innerHTML = ''; }
 
     function applyGenreSelection() {
-      const primaryVal = $('genreSelect').value;
-      const isCustom = primaryVal === 'custom';
-      $('customSoundInput').classList.toggle('hidden', !isCustom);
-      const fuseNames = getFuseSelectValues();
-
+      const primaryVal = $('genreSelect').value; const isCustom = primaryVal === 'custom';
+      $('customSoundInput').classList.toggle('hidden', !isCustom); const fuseNames = getFuseSelectValues();
       if (isCustom) {
-        if (!fuseNames.length) return;
-        const fused = fuseGenreProfiles(fuseNames);
-        if (!fused) return;
+        if (!fuseNames.length) return; const fused = fuseGenreProfiles(fuseNames); if (!fused) return;
         $('styleInput').value = [$('customSoundInput').value.trim(), fused.style].filter(Boolean).join(', ');
         $('moodInput').value = fused.mood; $('tempoInput').value = fused.tempo; $('vocalSelect').value = fused.vocalType; $('topicInput').value = fused.topic;
         activeTags = { vocals: fused.vocals, instruments: fused.instruments, production: fused.production, rhythm: fused.rhythm };
         tagStatus = {}; [...fused.vocals, ...fused.instruments, ...fused.production, ...fused.rhythm].forEach(t => tagStatus[t] = true);
         renderChips(); compilePrompt(); generateLyrics(); return;
       }
-
-      const names = [primaryVal, ...fuseNames].filter(Boolean);
-      if (!names.length) return;
-      const profile = fuseGenreProfiles(names);
-      if (!profile) return;
-
-      $('styleInput').value = profile.style; $('moodInput').value = profile.mood;
-      $('tempoInput').value = profile.tempo; $('vocalSelect').value = profile.vocalType;
-      $('topicInput').value = profile.topic;
+      const names = [primaryVal, ...fuseNames].filter(Boolean); if (!names.length) return;
+      const profile = fuseGenreProfiles(names); if (!profile) return;
+      $('styleInput').value = profile.style; $('moodInput').value = profile.mood; $('tempoInput').value = profile.tempo; $('vocalSelect').value = profile.vocalType; $('topicInput').value = profile.topic;
       activeTags = { vocals: profile.vocals, instruments: profile.instruments, production: profile.production, rhythm: profile.rhythm };
       tagStatus = {}; [...profile.vocals, ...profile.instruments, ...profile.production, ...profile.rhythm].forEach(t => tagStatus[t] = true);
       renderChips(); compilePrompt(); generateLyrics();
@@ -638,18 +585,13 @@
       sel.innerHTML = '<option value="">+ Select a style to fuse in…</option>' + $('genreSelect').innerHTML.replace(/<option value="">[\s\S]*?<\/option>/, '').replace(/<option value="custom">[\s\S]*?<\/option>/, '');
       sel.addEventListener('change', applyGenreSelection);
       const rm = document.createElement('button'); rm.type = 'button'; rm.className = 'touch-target min-h-[40px] min-w-[40px] rounded-lg text-studio-400 hover:text-rose-400 hover:bg-studio-800 flex items-center justify-center'; rm.textContent = '✕';
-      rm.onclick = () => { wrap.remove(); applyGenreSelection(); };
-      wrap.appendChild(sel); wrap.appendChild(rm); $('fuseSlots').appendChild(wrap);
+      rm.onclick = () => { wrap.remove(); applyGenreSelection(); }; wrap.appendChild(sel); wrap.appendChild(rm); $('fuseSlots').appendChild(wrap);
     }
 
     const $ = id => document.getElementById(id);
-    let currentEngine = 'suno';
-    let activeTags = { vocals: [], instruments: [], production: [], rhythm: [] };
-    let tagStatus = {};
-    let history = [];
+    let currentEngine = 'suno'; let activeTags = { vocals: [], instruments: [], production: [], rhythm: [] }; let tagStatus = {}; let history = [];
     try { history = JSON.parse(localStorage.getItem('pw_history_v2') || '[]'); } catch(e) {}
 
-    // Presets
     const PRESETS = {
       'synthwave-noir': { genre: 'Synthwave', style: 'Synthwave, Darksynth', mood: 'Driving, Cinematic', tempo: '118 BPM, F Minor', vocal: 'male', topic: 'Speeding through neon metropolis' },
       'deep-focus-ambient': { genre: 'Deep Focus Flow', style: 'Ambient Drone, 432Hz', mood: 'Focused, Tranquil', tempo: '60 BPM, C Maj', vocal: 'instrumental', engine: 'flow', topic: 'Pure flow and concentration' },
@@ -658,7 +600,11 @@
       'lofi-hiphop': { genre: 'Lo-Fi Hip-Hop', style: 'Lo-Fi Chillhop', mood: 'Cozy, Nostalgic', tempo: '82 BPM, Eb Maj', vocal: 'instrumental', topic: 'Raindrops on a coffee shop window' },
       'alt-rnb': { genre: 'Alternative R&B', style: 'Alternative R&B, Trap Soul', mood: 'Seductive, Late-Night', tempo: '88 BPM, F# Min', vocal: 'female', topic: 'Late night messages in empty halls' },
       'modern-metalcore': { genre: 'Modern Metalcore', style: 'Metalcore, Djent', mood: 'Aggressive, Massive', tempo: '150 BPM, Drop D', vocal: 'belting', topic: 'Rising when the walls collapsed' },
-      'jazz-electro-swing': { genre: 'Jazz', style: 'Jazz, Electro-Swing', mood: 'Playful, Sophisticated, Kinetic', tempo: '124 BPM, D Minor', vocal: 'female', topic: 'A secret rendezvous beneath city lights' }
+      'jazz-electro-swing': { genre: 'Jazz', style: 'Jazz, Electro-Swing', mood: 'Playful, Sophisticated, Kinetic', tempo: '124 BPM, D Minor', vocal: 'female', topic: 'A secret rendezvous beneath city lights' },
+      'orchestral-synthwave': { genre: 'Orchestral', style: 'Neoclassical, Synthwave', mood: 'Nostalgic, Vast, Cinematic', tempo: '110 BPM, F Minor', vocal: 'male', topic: 'Driving toward a memory that refuses to fade' },
+      'alt-rock-rnb': { genre: 'Alternative Rock', style: 'Alternative Rock, Alt R&B', mood: 'Raw, Intimate, Cathartic', tempo: '96 BPM, E Minor', vocal: 'female', topic: 'Two people trying to repair what they broke' },
+      'metal-dubstep': { genre: 'Heavy Metal', style: 'Heavy Metal, Dubstep', mood: 'Aggressive, Futuristic, Explosive', tempo: '140 BPM, C Minor', vocal: 'belting', topic: 'Breaking through the machine that controls the city' },
+      'folk-dnb': { genre: 'Folk', style: 'Indie Folk, Liquid Drum & Bass', mood: 'Earthy, Soaring, Restless', tempo: '174 BPM, G Major', vocal: 'male', topic: 'Leaving home with one suitcase and a promise' }
     };
 
     let toastTimer = null;
@@ -755,7 +701,7 @@
     }
 
     function compilePrompt() {
-      const genre = $('genreSelect').value === 'custom' ? $('customSoundInput').value.trim() :$('genreSelect').value.trim();
+      const genre = $('genreSelect').value === 'custom' ? $('customSoundInput').value.trim() : $('genreSelect').value.trim();
       const style = $('styleInput').value.trim(); const mood = $('moodInput').value.trim(); const tempo = $('tempoInput').value.trim();
       const vocalPref = $('vocalSelect').value; const maxChars = parseInt($('charLimit').value, 10) || 0; const budget = parseInt($('tagBudget').value, 10) || 6;
       
@@ -788,7 +734,7 @@
         const p_inst = getActive(activeTags.instruments).join(', ') || 'Standard Instrumentation';
         const p_tempo = tempo || '120 BPM'; const p_vocal = vocalPref === 'instrumental' ? 'Instrumental' : (vocalPref !== 'auto' ? `${vocalPref} vocals` : 'Lead vocals');
         const p_prod = getActive(activeTags.production).join(', ') || 'Clean mix';
-        promptStr = `[${p_genre}] + [${p_mood}] + [${p_inst}] + [${p_tempo}] + [${p_vocal}] + [${p_prod}]`;
+        promptStr = `[${p_genre}] [${p_mood}] [${p_inst}] [${p_tempo}] [${p_vocal}] [${p_prod}]`;
         const extra = [...getActive(activeTags.vocals), ...getActive(activeTags.rhythm)];
         if (extra.length) promptStr += ` | Extras: ${extra.join(', ')}`;
       } else if (currentEngine === 'flow') {
@@ -812,10 +758,8 @@
       $('negOutput').value = neg.join(', ');
     }
 
-    // LYRICS ENGINE (Dynamic Re-roll Math Applied to All Templates)
     function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
     const sec = (tag, lines) => `[${tag}]\n${lines}`;
-    // Creates a dynamic thematic placeholder based on context rather than injecting literal topics directly.
     const tVar = () => pick(['the feeling', 'the moment', 'the memory', 'the fire', 'the shadow', 'the truth', 'this rhythm']);
 
     const LYRIC_BUILDERS = {
@@ -984,7 +928,6 @@
       }).join('\n').replace(/\n{3,}/g, '\n\n').trim();
     }
 
-    // Touch-optimized Audio API initialization for iPad
     let audioCtx = null; let droneOsc = null;
     function ensureAudioContext() {
       if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -1041,7 +984,6 @@
       setTimeout(() => URL.revokeObjectURL(url), 1000); showToast(`Exported ${filename}`);
     });
 
-    // Event Listeners & Bootstrapping
     document.querySelectorAll('.preset-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const pKey = btn.getAttribute('data-preset'); const pData = PRESETS[pKey]; if (!pData) return;
@@ -1062,7 +1004,7 @@
             const isMatch = c.getAttribute('data-engine') === currentEngine;
             c.classList.toggle('active', isMatch); c.classList.toggle('border-amber-500', isMatch);
             c.classList.toggle('bg-amber-500/10', isMatch); c.classList.toggle('border-studio-800', !isMatch);
-            if (isMatch) $('quickBundleBtn').textContent = `📋 Copy ${c.getAttribute('data-engine-label') || 'Prompt'} Bundle`;
+            if (isMatch) $('quickBundleBtn').textContent = `📋 Copy Bundle`;
           });
           $('flowSettings').classList.toggle('hidden', currentEngine !== 'flow');
         }
@@ -1111,7 +1053,7 @@
 
     $('addTraitBtn').onclick = () => {
       const val = $('newTraitInput').value.trim();
-      if (!val || tagStatus[val]) return; // prevent dupe chip stacking
+      if (!val || tagStatus[val]) return; 
       activeTags.production.push(val); tagStatus[val] = true; $('newTraitInput').value = '';
       renderChips(); compilePrompt();
     };
@@ -1152,7 +1094,6 @@
     $('copyLyricsBtn').onclick = () => copyText($('lyricsOutput').value, 'Lyrics Copied!');
     $('quickBundleBtn').onclick = () => copyText($('promptOutput').value + '\n\n' + $('lyricsOutput').value, 'Bundle Copied!');$('lyricsOutput').addEventListener('input', updateLyricMetrics);
 
-    // Initial boot
     document.querySelector('.preset-btn').click(); renderHistory();
   })();
   </script>
