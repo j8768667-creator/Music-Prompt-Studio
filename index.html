@@ -1053,8 +1053,24 @@
         const p_inst = getActive('instruments').slice(0, 3).join(', ') || 'Standard Instrumentation';
         const p_tempo = tempo || '120 BPM';
         const p_vocal = vocalPref === 'instrumental' ? 'Instrumental' : (vocalPref !== 'auto' ? `${vocalPref} vocals` : 'Lead vocals');
-        promptStr = `[${p_genre}] [${p_mood}] [${p_inst}] [${p_tempo}] [${p_vocal}]`;
-        if (chosenTags.length) promptStr += ` | ${chosenTags.join(', ')}`;
+        // BUG FIX: unlike its sibling StepAudio 3 format, Flow had no
+        // reserved slot for production/mix traits -- they only got in via
+        // the shared, budget-limited chosenTags list. Fusing two or more
+        // styles roughly doubles the number of instrument/vocal tags
+        // competing for that same small budget, so a fused style's
+        // production character (reverb, sidechain, saturation -- the part
+        // that actually IS its "style") was frequently the first thing
+        // silently squeezed out. Give it a guaranteed slot, same as Step.
+        const p_prod = getActive('production').slice(0, 2).join(', ') || 'Clean mix';
+        // The Flow Parameters panel (tuning Hz / loop type) was pure UI --
+        // its values were never read anywhere when building this prompt.
+        const p_tuning = $('flowTuning') ? $('flowTuning').value : '';
+        const p_loop = $('flowLoop') ? $('flowLoop').value : '';
+        const tuningLabel = { '432hz': '432 Hz', '440hz': '440 Hz', '528hz': '528 Hz' }[p_tuning] || '440 Hz';
+        const loopLabel = { seamless: 'Seamless Infinite Loop', evolving: 'Evolving 16-Bar Loop', locked: 'Metronomic Loop' }[p_loop] || 'Evolving 16-Bar Loop';
+        promptStr = `[${p_genre}] [${p_mood}] [${p_inst}] [${p_tempo}] [${p_vocal}] [${p_prod}] [${tuningLabel}, ${loopLabel}]`;
+        const extra = [...getActive('vocals'), ...getActive('rhythm')].slice(0, 3);
+        if (extra.length) promptStr += ` | ${extra.join(', ')}`;
       }
       
       const morphState = updateMorphOutputs();
@@ -1074,7 +1090,24 @@
       $('negOutput').value = neg.join(', ');
     }
 
-    function pickRandom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+    // BUG FIX: the old pickRandom had no memory, so clicking "Re-roll" had
+    // up to a 50% chance of silently handing back the exact same lines for
+    // any given section (most pools only have 2 variants) -- it looked like
+    // the button was broken. Track the last pick per-pool (keyed by the
+    // pool's first entry, which is stable per call site) and re-roll once
+    // to avoid repeating it.
+    const _lastPick = new Map();
+    function pickRandom(arr) {
+      if (!arr || arr.length === 0) return '';
+      if (arr.length === 1) return arr[0];
+      const key = arr[0];
+      let choice = arr[Math.floor(Math.random() * arr.length)];
+      if (choice === _lastPick.get(key)) {
+        choice = arr[(arr.indexOf(choice) + 1 + Math.floor(Math.random() * (arr.length - 1))) % arr.length];
+      }
+      _lastPick.set(key, choice);
+      return choice;
+    }
     const sec = (tag, lines) => `[${tag}]\n${lines}`;
 
     function capitalize(str) {
@@ -1082,41 +1115,84 @@
       return str.charAt(0).toUpperCase() + str.slice(1);
     }
 
-    function buildCustomStoryLyrics(clean, shortTitle, lower) {
+    // Keeps an inserted phrase short enough that dropping it into a line
+    // doesn't blow out the syllable count/meter of hand-written couplets.
+    function safeTitlePhrase(phrase, maxWords = 4) {
+      const words = (phrase || '').trim().split(/\s+/).filter(Boolean);
+      if (words.length === 0) return 'this story';
+      return words.slice(0, maxWords).join(' ');
+    }
+
+    // Ties a static genre-bucket song back to what the user actually typed,
+    // as its own standalone sentence (never spliced into the middle of an
+    // existing pre-written line) so grammar and rhyme stay intact regardless
+    // of how long or short the user's phrase is.
+    function personalizeGenreLyrics(res, rawTitle) {
+      const title = safeTitlePhrase(rawTitle);
+      const openers = [
+        `This one's about ${title}.`,
+        `Every verse comes back to ${title}.`,
+        `Here's the story of ${title}.`
+      ];
+      const closers = [
+        `That's ${title}, told the only way it could be told.`,
+        `Remember ${title} -- that's the whole of it.`,
+        `${capitalize(title)}. That's the story, and it's true.`
+      ];
+      res.v1 = `${pickRandom(openers)}\n${res.v1}`;
+      res.chorus = `${res.chorus}\n${pickRandom(closers)}`;
+      return res;
+    }
+
+    function buildCustomStoryLyrics(clean, shortTitle, lower, allWords) {
       const stopWords = new Set(['the','a','an','and','or','but','if','then','so','of','in','on','at','to','for','with','by','about','against','between','into','through','during','before','after','above','below','from','up','down','is','are','was','were','be','been','being','have','has','had','do','does','did','will','would','shall','should','can','could','may','might','must','who','whom','whose','which','that','this','these','those','i','you','he','she','it','we','they','me','him','her','us','them','my','your','his','its','our','their','one','two','three','first','last','new','old','just','really','very']);
-      const words = clean.split(/[^a-zA-Z0-9]+/).filter(w => w.length > 2 && !stopWords.has(w.toLowerCase()));
+      const words = (allWords && allWords.length ? allWords : clean.split(/\s+/))
+        .filter(w => w.length > 2 && !stopWords.has(w.toLowerCase()));
+      // BUG FIX: shortTitle can be up to 4 whole words (see analyzeStoryConcept),
+      // but these lines were written assuming a short 1-2 word filler noun.
+      // Splicing a long phrase into the middle of a hand-metered line broke
+      // the scansion/rhyme (e.g. "Carrying [a lonely astronaut drifting home]
+      // upon the open ground"). Cap it to 3 words for any mid-line use.
+      const t = safeTitlePhrase(shortTitle, 3);
       const w1 = words[0] || 'the journey';
       const w2 = words[1] || 'the vision';
       const w3 = words[2] || words[0] || 'the horizon';
+      const w4 = words[3] || words[1] || 'the reckoning';
 
       const v1 = pickRandom([
-        `It started with a quiet step, no turning back around\nCarrying ${shortTitle} upon the open ground\nEvery shadow in the distance was a question in the air\nHolding onto ${w1} when nobody else was there\nListening to the cadence of the heartbeat in the chest\nKnowing that this journey wouldn't give us any rest`,
-        `Out where the road begins and the quiet falls away\nCarrying ${shortTitle} into the break of day\nThe wind was blowing cold, but the fire inside was warm\nAnchored in ${w2} right before the coming storm`
+        `It started with a quiet step, no turning back around\nCarrying ${t} across the open ground\nEvery shadow in the distance was a question in the air\nHolding onto ${w1} when nobody else was there\nListening to the cadence of the heartbeat in the chest\nKnowing that this journey wouldn't give us any rest`,
+        `Out where the road begins and the quiet falls away\nCarrying ${t} into the break of day\nThe wind was blowing cold, but the fire inside was warm\nAnchored in ${w2} right before the coming storm`,
+        `${capitalize(w1)} was the first thing I noticed, the first thing I knew\nSomething about ${t} that kept pulling me through\nI didn't have a map, only a reason to go\nFollowing ${w2} wherever it led, however slow`
       ]);
 
       const pre = pickRandom([
         `And the doubts start whispering what we cannot do\nEvery heavy obstacle is testing what is true\nOne deep breath before the world begins to shake\nThis is every single promise that we chose to make`,
-        `Now the moment arrives, the turning of the tide\nNo more looking back, nowhere left to hide\nStanding with ${w1} underneath the open sky\nWatching all the old illusions pass us by`
+        `Now the moment arrives, the turning of the tide\nNo more looking back, nowhere left to hide\nStanding with ${w1} underneath the open sky\nWatching all the old illusions pass us by`,
+        `There's a second where ${w3} could slip clean away\nA held breath, a heartbeat, a debt we have to pay\nBut ${w1} doesn't let go, not now, not like this\nEverything comes down to a moment we can't miss`
       ]);
 
       const chorus = pickRandom([
-        `Carry ${shortTitle} all the way through the night!\nTurn every heavy struggle into blazing light!\nWe walked through the fire, we stood against the gale,\nWhen they said we'd fall, we wrote a different tale!\nStanding on the summit where the eagles dare to soar,\nLiving out the meaning of what we came here for!`,
-        `This is the story, this is the flame!\nCarrying ${shortTitle} and remembering the name!\nThrough every single trial and through every single scar,\nWe followed the promise of who we truly are!`
+        `Carry ${t} all the way through the night\nTurn every heavy struggle into blazing light\nWe walked through the fire, we stood against the gale,\nWhen they said we'd fall, we wrote a different tale\nStanding on the summit where the eagles dare to soar,\nLiving out the meaning of what we came here for`,
+        `This is the story, this is the flame\nCarrying ${t}, remembering the name\nThrough every single trial and through every single scar,\nWe followed ${w2} to find out who we are`,
+        `So this is ${t}, out loud for everyone to hear\nEvery mile of ${w1} is the reason we're still here\nNot the version they expected, not the ending they could see,\nJust ${w3}, and the truth of what it means to be free`
       ]);
 
       const v2 = pickRandom([
         `The hardest miles are the ones they never see\nPursuing ${w2} through the deep mystery\nCounting up the lessons and the hours that it took\nWriting every victory inside a weathered book\nLooking back across the road, the shadows disappear\nEverything we hoped for is finally standing clear`,
-        `Scars upon our hands, but the spirit never broke\nRising up like embers through the morning smoke\nRemembering ${w3} when the road was steep and long\nTurning every struggle into an unbreakable song`
+        `Scars upon our hands, but the spirit never broke\nRising up like embers through the morning smoke\nRemembering ${w3} when the road was steep and long\nTurning every struggle into an unbreakable song`,
+        `Nobody saw the version of this where ${w4} won\nThey bet against ${t} before it had begun\nBut every quiet doubt just made the fire grow\nAnd ${w2} is still standing, still here, still the show`
       ]);
 
       const bridge = pickRandom([
-        `Maybe the path was broken just to teach us how to stand\nFinding what was missing in the palm of an open hand\nEvery doubt shatters as ${shortTitle} comes alive,\nThis is the revelation that made us survive!`,
-        `Strip away the fear and the noise of yesterday\nWatch the clouds dissolve and the tempest roll away\nNow the horizon opens wide before our eyes,\nStanding in the beauty of the morning skies!`
+        `Maybe the path was broken just to teach us how to stand\nFinding what was missing in the palm of an open hand\nEvery doubt shatters as ${t} comes alive,\nThis is the revelation that made us survive`,
+        `Strip away the fear and the noise of yesterday\nWatch the clouds dissolve and the tempest roll away\nNow the horizon opens wide before our eyes,\nStanding in the beauty of the morning skies`,
+        `Take away ${w1}, take away the name,\nWhat's left is still standing, still burning the same\nThat's the part of ${t} nobody could erase,\nThe part that kept showing up, kept holding its place`
       ]);
 
       const outro = pickRandom([
-        `Carrying ${shortTitle} into the dawn...\nNo looking back now, the shadows are gone...\nPeace in the quiet... peace on the road...`,
-        `And the story carries on... like an anthem in the air...\nStanding victorious... finally there...`
+        `Carrying ${t} into the dawn...\nNo looking back now, the shadows are gone...\nPeace in the quiet... peace on the road...`,
+        `And the story carries on... like an anthem in the air...\nStanding victorious... finally there...`,
+        `${capitalize(t)}... still here... still true...\nQuiet now... the story settles into you...`
       ]);
 
       return { v1, pre, chorus, v2, bridge, outro };
@@ -1151,7 +1227,22 @@
 
       const lower = topic.toLowerCase();
       const words = clean.split(/\s+/);
-      const shortTitle = words.length <= 4 ? clean : words.slice(0, 3).join(' ') + (words[3] ? ' ' + words[3] : '');
+      // BUG FIX: this used to hard-cut at exactly 4 words no matter what,
+      // which sliced mid-clause and could land the title on a stray
+      // connector -- e.g. "quantum computer falls in love with a barista"
+      // became the title "quantum computer falls in" (cut right before the
+      // word "love"). Allow a slightly longer title, and when a cut is
+      // needed, back up over trailing prepositions/articles/conjunctions so
+      // the phrase doesn't end mid-clause.
+      const trailingFillers = new Set(['a','an','the','of','in','on','at','to','for','with','by','who','which','that','and','or','but','from','into','onto']);
+      const TITLE_WORD_CAP = 6;
+      let titleWords = words.slice(0, TITLE_WORD_CAP);
+      if (words.length > TITLE_WORD_CAP) {
+        while (titleWords.length > 1 && trailingFillers.has(titleWords[titleWords.length - 1].toLowerCase())) {
+          titleWords.pop();
+        }
+      }
+      const shortTitle = words.length <= TITLE_WORD_CAP ? clean : titleWords.join(' ');
 
       let res = {
         title: shortTitle,
@@ -1167,7 +1258,8 @@
         v2: '',
         bridge: '',
         outro: '',
-        isCustom: true
+        isCustom: true,
+        genreMatched: true
       };
 
       // 1. SPACE & COSMIC / ASTRONAUT / JUPITER / MARS / DAUGHTER / ORBIT
@@ -1638,7 +1730,7 @@
 
       // 13. CUSTOM / NOVEL STORY CONCEPT (DYNAMIC STORY WEAVER)
       } else {
-        const custom = buildCustomStoryLyrics(clean, shortTitle, lower);
+        const custom = buildCustomStoryLyrics(clean, shortTitle, lower, words);
         res.v1 = custom.v1;
         res.pre = custom.pre;
         res.chorus = custom.chorus;
@@ -1650,6 +1742,20 @@
         res.action = `carrying ${shortTitle} forward`;
         res.object = shortTitle;
         res.climax = `standing victorious with ${shortTitle}`;
+        res.genreMatched = false;
+      }
+
+      // The 12 fixed genre buckets above are static, pre-written songs that
+      // only differ by which bucket a keyword regex happened to match --
+      // on their own they never reflect what the user actually typed, which
+      // was the single biggest cause of "generic/poor" lyrics. Splice in a
+      // short, grammatically self-contained line (its own sentence, so it
+      // can't wreck the meter/rhyme of a pre-written couplet) that names the
+      // real concept, so genre-matched songs are still tied to the user's
+      // specific idea instead of being identical for any input that hits
+      // the same bucket.
+      if (res.genreMatched) {
+        personalizeGenreLyrics(res, shortTitle);
       }
 
       // Populate architectural variations from the cohesive story
