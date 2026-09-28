@@ -70,7 +70,11 @@ html,body{background:#0a0d12;color:#f0f4f9;font-family:system-ui,-apple-system,"
           <div><label class="lbl">Key Center</label><select id="key" class="inp"></select></div>
           <div class="col-span-2"><label class="lbl">Vocals</label><select id="vocal" class="inp"></select></div>
         </div>
-        <div class="mt-3.5"><label class="lbl">Extra tags (optional, comma-separated)</label><input id="extra" class="inp" placeholder="e.g. epic guitar solo, layered harmonies"></div>
+        <div class="grid sm:grid-cols-3 gap-3.5 mt-3.5">
+          <div><label class="lbl">Vocal Delivery</label><select id="deliv" class="inp"></select></div>
+          <div><label class="lbl">Vocal Mix Level</label><select id="vmix" class="inp"></select></div>
+          <div><label class="lbl">Extra tags (optional)</label><input id="extra" class="inp" placeholder="e.g. layered harmonies"></div>
+        </div>
       </section>
 
       <!-- 2 -->
@@ -103,7 +107,7 @@ html,body{background:#0a0d12;color:#f0f4f9;font-family:system-ui,-apple-system,"
             <select id="arc" class="inp">
               <option value="">None</option>
               <option>dramatic dynamic build</option><option>intricate melodic phrasing</option>
-              <option>slow build to massive climax</option><option>steady hypnotic groove</option>
+              <option>slow unhurried build</option><option>sparse held vocal phrases</option><option>slow build to massive climax</option><option>steady hypnotic groove</option>
             </select></div>
         </div>
         <div id="secChips" class="flex flex-wrap gap-1.5"></div>
@@ -137,6 +141,7 @@ html,body{background:#0a0d12;color:#f0f4f9;font-family:system-ui,-apple-system,"
         <div id="drafter" class="mb-2.5">
           <div class="flex gap-2"><input id="theme" class="inp" placeholder="Theme or story (optional)"><button id="draftBtn" class="btn shrink-0" style="background:#06b6d4;color:#0a0d12">Draft lyrics</button></div>
           <p class="hint mt-1.5">Written by Claude to fit your genre, mood, tempo and sections. Press again for a fresh take.</p>
+          <button id="stripBtn" type="button" class="hint mt-1.5 underline">Strip delivery cues (if an engine sings them aloud)</button>
           <details class="mt-2"><summary class="hint cursor-pointer" style="color:#06b6d4">Out of credits? Use another AI</summary>
             <div id="extAI" class="flex flex-wrap gap-1.5 mt-2"></div>
             <p class="hint mt-1.5">Copies the lyric prompt and opens the site. If it doesn't fill in, paste it; then paste the reply into the box below. "Copy only" is for browser AI sidebars (Edge Copilot, Chrome Gemini, Brave Leo).</p>
@@ -168,7 +173,7 @@ const MOODS={
   rock:['dramatic','epic','melancholic','nostalgic','driving','triumphant','introspective','bittersweet'],
   elec:['neon-lit','dark','hypnotic','euphoric','driving','nostalgic','futuristic','tense'],
   roots:['heartfelt','wistful','sun-baked','rowdy','homespun','defiant','bittersweet','nostalgic'],
-  soft:['warm','dreamy','intimate','atmospheric','cinematic','melancholic','hazy','serene']
+  soft:['warm','dreamy','intimate','atmospheric','cinematic','melancholic','hazy','serene','brooding','vast']
 };
 const PRODS={
   analog:['vintage warm production','analog tape warmth','wide stereo mix','punchy mix','reverberant space','lo-fi texture','dynamic arrangement'],
@@ -197,7 +202,7 @@ const G={
  'Chillwave':{sub:['Lo-Fi Chillwave','Hypnagogic Pop','Vaporwave'],era:[['2010s bedroom',['tape wobble','washed-out synths']],['modern nostalgia',['vinyl crackle','soft keys']]],
    instr:['washed-out synths','tape-saturated drums','soft bass','vinyl crackle','warm keys','dreamy guitar'],bpm:95,vocal:'Female airy vocals',st:'pop',m:'soft',p:'analog'},
  'Cinematic Ambient':{sub:['Dark Ambient','Drone','Neo-Classical Ambient'],era:[['timeless',['string swells','felt piano']],['modern film score',['hybrid textures','sub boom']]],
-   instr:['evolving pads','felt piano','string swells','deep drones','soft choir','granular textures'],bpm:70,vocal:'Ethereal choir backing',st:'ambient',m:'soft',p:'modern'},
+   instr:['evolving pads','felt piano','string swells','deep drones','soft choir','granular textures'],bpm:70,vocal:'Solo breathy vocal, sparse phrases',st:'ambient',m:'soft',p:'modern'},
  'Neo-Soul':{sub:['Alt R&B','Jazz-Soul','Quiet Storm'],era:[['90s Soulquarian',['rhodes piano','loose drums']],['modern',['warm sub bass','lush chords']]],
    instr:['rhodes piano','warm bass','laid-back drums','muted guitar','lush chords','horn stabs'],bpm:88,vocal:'Male melodic vocal',st:'pop',m:'soft',p:'analog'},
  'Electro-Swing':{sub:['Swing House','Gypsy Jazz Electro','Big Band Electro'],era:[['1930s sample style',['vintage brass','crackling shellac']],['modern club',['sidechained bass','punchy 4/4 kick']]],
@@ -210,7 +215,7 @@ const G={
 const T={rock:['Intro','Build','Instrumental Solo','Climax','Outro'],edm:['Intro','Build','Drop','Breakdown','Drop','Outro'],pop:['Intro','Verse 1','Chorus','Verse 2','Chorus','Outro'],ambient:['Intro','Evolution','Peak','Outro']};
 const SECTIONS=['[Intro]','[Build]','[Verse]','[Chorus]','[Bridge]','[Solo]','[Drop]','[Climax]','[Outro]'];
 const NEG=['auto-tune','clipping','distortion','muddy low end','tinny highs','harsh sibilance'];
-const VOCALS=['Instrumental, no vocals','Female airy vocals','Male melodic vocal','Ethereal choir backing','Gritty male vocal','Soulful female vocal',''];
+const VOCALS=['Instrumental, no vocals','Female airy vocals','Male melodic vocal','Ethereal choir backing','Gritty male vocal','Soulful female vocal','Solo breathy vocal, sparse phrases',''];
 const NOTES=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
 // Character limits are per-engine settings: edit here if a platform changes them.
 const ENG={
@@ -230,6 +235,9 @@ fill($('genre'),Object.keys(G));
 NOTES.forEach(n=>['minor','major'].forEach(s=>$('key').add(new Option(`${n} ${s}`,`${n} ${s}`))));
 $('key').insertBefore(new Option('Any Key',''),$('key').firstChild);$('key').value='';
 VOCALS.forEach(v=>$('vocal').add(new Option(v||'Unspecified',v)));
+const DELIV=[['None',''],['Expressive & clear','emotionally expressive delivery, clear diction, dynamic vocal performance'],['Fragile & aching','fragile, aching, breathy vocal with subtle vibrato, close-mic intimacy'],['Tender & warm','tender, warm, intimate close-mic vocal, articulate consonants'],['Soaring & dramatic','powerful, soaring, emotive vocal with dramatic dynamics'],['Hushed & haunting','hushed, haunting, whispered intensity, then swelling']];
+DELIV.forEach(([n,v])=>$('deliv').add(new Option(n,v)));$('deliv').selectedIndex=1;
+[['None',''],['Upfront lead','lead vocal upfront in the mix, prominent and clear, sparse arrangement leaving space for the vocal'],['Balanced','vocal balanced with the instruments'],['Blended','vocal blended into the instrumental texture']].forEach(([n,v])=>$('vmix').add(new Option(n,v)));$('vmix').selectedIndex=1;
 
 function chips(el,items,set,after){
   el.innerHTML='';
@@ -258,7 +266,7 @@ function onGenre(){
   fill($('era'),g.era.map(e=>e[0]),'Any era');
   S.instr=g.instr.slice(0,3);
   S.moods=new Set(MOODS[g.m].slice(0,2));S.prods=new Set(PRODS[g.p].slice(0,2));
-  $('bpm').value=g.bpm;$('vocal').value=g.vocal;
+  $('bpm').value=g.bpm;$('vocal').value=g.vocal;$('arc').value=g.bpm<=90?'slow unhurried build':'';
   setStruct(g.st);renderInstr();renderChips();go();
 }
 $('genre').onchange=onGenre;
@@ -293,10 +301,13 @@ function tokens(){
         vocal=$('vocal').value,arc=$('arc').value,
         extra=$('extra').value.split(',').map(s=>s.trim()),
         L=detail==='Lean',M=[...S.moods].slice(0,L?2:99),P=L?[]:[...S.prods],I=L?S.instr.slice(0,2):detail==='Vivid'?[...S.instr,...((gd().era.find(x=>x[0]===era)||[0,[]])[1])]:S.instr,b=bpm?bpm+' BPM':'',
+        sl=(+bpm||100)<=85&&vocal&&!/^Instrumental/.test(vocal)?'slow unhurried vocal phrasing':'',
+        dl=vocal&&!/^Instrumental/.test(vocal)?$('deliv').value:'',
+        vm=vocal&&!/^Instrumental/.test(vocal)?$('vmix').value:'',
         k=key?(eng==='stepaudio'?key:'key of '+key):'';
   const order=eng==='stepaudio'
-    ?[g,sub,...I,arc,...M,b,k,vocal,era,...P,...extra]
-    :[g,sub,era,...M,b,k,vocal,...I,...P,arc,...extra];
+    ?[g,sub,...I,arc,...M,b,k,vocal,sl,vm,dl,era,...P,...extra]
+    :[g,sub,era,...M,b,k,vocal,sl,vm,dl,...I,...P,arc,...extra];
   const seen=new Set();
   return order.filter(t=>{const l=t&&t.toLowerCase();if(!t||seen.has(l))return false;seen.add(l);return true;});
 }
@@ -317,7 +328,7 @@ function compile(){
 }
 function go(){trimOn=false;compile();}
 $('trimBtn').onclick=()=>{trimOn=true;compile();};
-['sub','bpm','key','vocal','arc','extra'].forEach(id=>{$(id).addEventListener('input',go);$(id).addEventListener('change',go);});
+['sub','bpm','key','vocal','deliv','vmix','arc','extra'].forEach(id=>{$(id).addEventListener('input',go);$(id).addEventListener('change',go);});
 
 function toast(m){const t=$('toast');t.textContent=m;t.style.opacity=1;t.style.transform='translate(-50%,-6px)';
   setTimeout(()=>{t.style.opacity=0;t.style.transform='translate(-50%,0)';},1600);}
@@ -333,7 +344,7 @@ $('copyNegBtn').onclick=()=>copy($('negOut').value,'Negative prompt copied');
 function reset(){
   $('genre').value='Symphonic Rock';onGenre();
   $('sub').value='Art Rock';$('era').value='70s analog warmth';
-  $('key').value='E minor';$('arc').value='intricate melodic phrasing';$('extra').value='';applySub();
+  $('key').value='E minor';$('extra').value='';$('deliv').selectedIndex=1;$('vmix').selectedIndex=1;applySub();
   S.negs=new Set(NEG);renderInstr();renderChips();go();
 }
 $('resetBtn').onclick=()=>{reset();$('presetSel').value='';$('presetDel').classList.add('hidden');toast('Reset to default template');};
@@ -377,12 +388,12 @@ const STARTERS={'★ Symphonic Rock epic':{genre:'Symphonic Rock',sub:'Orchestra
 const loadP=()=>{let o={};try{o=JSON.parse(localStorage.getItem(PK)||'{}');}catch(_){o=mem;persist=false;}return o;};
 const saveP=o=>{mem=o;try{localStorage.setItem(PK,JSON.stringify(o));return true;}catch(_){persist=false;return false;}};
 const snap=()=>({eng,genre:$('genre').value,sub:$('sub').value,era:$('era').value,instr:S.instr,moods:[...S.moods],prods:[...S.prods],
-  bpm:$('bpm').value,key:$('key').value,vocal:$('vocal').value,arc:$('arc').value,extra:$('extra').value,st:$('struct').value,lyr:$('lyrOut').value});
+  bpm:$('bpm').value,key:$('key').value,vocal:$('vocal').value,deliv:$('deliv').value,vmix:$('vmix').value,arc:$('arc').value,extra:$('extra').value,st:$('struct').value,lyr:$('lyrOut').value});
 function applyP(p){
   $('genre').value=p.genre;onGenre();$('sub').value=p.sub||'';$('era').value=p.era||'';
   if(!p.instr){applySub();}else{
     S.instr=p.instr;S.moods=new Set(p.moods);S.prods=new Set(p.prods);
-    ['bpm','key','vocal','arc','extra'].forEach(k=>$(k).value=p[k]);
+    ['bpm','key','vocal','deliv','vmix','arc','extra'].forEach(k=>{if(p[k]!==undefined)$(k).value=p[k];});
     $('struct').value=p.st;$('lyrOut').value=p.lyr;}
   renderInstr();renderChips();setEngine(p.eng||eng);
 }
@@ -404,7 +415,7 @@ $('rndBtn').onclick=()=>{
   const er=pick(d.era);$('era').value=er[0];
   S.instr=shuffle([...new Set([...er[1],...d.instr])]).slice(0,4);
   S.moods=new Set(shuffle(MOODS[d.m]).slice(0,3));S.prods=new Set(shuffle(PRODS[d.p]).slice(0,2));
-  $('arc').value=pick([...$('arc').options].map(o=>o.value));$('vocal').value=pick([d.vocal,d.vocal,...VOCALS.slice(0,6)]);
+  $('arc').value=pick([...$('arc').options].map(o=>o.value));$('vocal').value=pick([d.vocal,d.vocal,...VOCALS.slice(0,6)]);$('deliv').selectedIndex=1+Math.floor(Math.random()*(DELIV.length-1));
   renderInstr();renderChips();go();
 };
 
@@ -419,8 +430,10 @@ function lyricPrompt(){
   const tags=($('lyrOut').value.match(/\[[^\]]+\]/g)||[]).map(t=>t.replace(/\s*[-–].*\]/,']'));
   const secs=(tags.length?tags:['[Verse 1]','[Chorus]','[Verse 2]','[Chorus]','[Outro]']).join(' ');
   const bpm=$('bpm').value||'mid-tempo', sub=$('sub').value, era=$('era').value;
+  const slow=(+$('bpm').value||100)<=85||/Ambient|Drone|Post-Rock|Chillwave|Dream|Shoegaze/.test($('genre').value+' '+sub);
+  const pace=slow?'Very slow, unhurried delivery at '+bpm+' BPM: 3-6 syllables per line, 2-4 lines per section, about 40 words in total. Keep most words concrete and consonant-clear so each can be articulated; use open vowels (oh, ah, low, home) only on the last held word of a line. Let single images breathe, repeat key phrases, leave silence between lines. Nothing may feel rushed or crammed.':'Singable at '+bpm+' BPM: mostly 6-10 syllables a line, varied length, natural stress. The chorus hook is one short memorable line, repeated.';
   return `Write original song lyrics.
-Style: ${$('genre').value}${sub?' / '+sub:''}${era?', '+era:''}. Mood: ${[...S.moods].join(', ')||'open'}. Tempo: ${bpm} BPM. Vocal: ${vocal||'any'}.
+Style: ${$('genre').value}${sub?' / '+sub:''}${era?', '+era:''}. Mood: ${[...S.moods].join(', ')||'open'}. Tempo: ${bpm} BPM. Vocal: ${vocal||'any'}. Delivery: ${$('deliv').value||'natural'}.
 Theme: ${$('theme').value.trim()||'your choice: something specific and unexpected, not love or heartbreak in general'}.
 Angle to take: ${pick(ANGLES)}.
 Rhyme approach: ${pick(RHYMES)}.
@@ -429,10 +442,12 @@ Sections, in this order: ${secs}
 Rules:
 - Concrete, specific imagery: named objects, places, times of day, textures. No abstract filler.
 - Avoid clichés: neon, echoes, shadows, whispers, fading light, fire in the heart, chasing dreams, dancing in the dark, endless night.
-- Singable at ${bpm} BPM: mostly 6-10 syllables a line, varied length, natural stress. The chorus hook is one short memorable line, repeated.
+- ${pace}
 - Verses move the story forward; the chorus states the central idea; a bridge changes perspective. Never force a rhyme that bends the sense.
 - Instrumental sections (solo, drop, build, intro) get only a bracket cue, no words.
-- Output only lyrics. Section tags in square brackets on their own line, with an optional short delivery cue, e.g. [Chorus - big, layered vocals]. No title, no commentary.`;
+- Emotion: give the song one specific human detail and a turn (something admitted, lost or released). Show feeling through images and actions; never name it ("sad", "lonely").
+- Every vocal section tag carries a short delivery cue tracing an emotional arc, e.g. [Verse 1 - hushed, close, trembling, piano only], [Chorus - opens up, aching, full voice], [Bridge - almost spoken, fragile], [Final Chorus - raw, then softly resolved]. Instrumental sections get a plain instrumental cue. Keep the band thin under the voice: name what drops out or sits back in the cue ("strings drop out", "pads hold low") so the vocal stays clear.
+- Output only lyrics. Section tags in square brackets on their own line. No title, no commentary.`;
 }
 
 const EXT=[['ChatGPT','https://chatgpt.com/?q='],['Gemini','https://gemini.google.com/app'],['Copilot','https://copilot.microsoft.com/?q='],['Claude (free)','https://claude.ai/new?q='],['Copy only','']];
@@ -441,6 +456,7 @@ EXT.forEach(([n,u])=>{
   if(u){a.href=u;a.target='_blank';a.rel='noopener';}
   a.addEventListener('click',()=>{const t=lyricPrompt();copy(t,'Prompt copied. Paste it into the AI if needed');if(u.includes('?q='))a.href=u+encodeURIComponent(t);});
   $('extAI').appendChild(a);});
+$('stripBtn').onclick=()=>{$('lyrOut').value=$('lyrOut').value.replace(/\[([^\]\-–]+?)\s*[-–][^\]]*\]/g,'[$1]');toast('Cues removed');};
 $('draftBtn').onclick=async()=>{
   if(!smp){try{smp=await (window.claude&&window.claude.use('sample'));}catch(_){}}
   if(!smp){toast('Not available here. Use the other-AI options');return;}
